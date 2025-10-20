@@ -6,7 +6,7 @@ import { startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
  * @returns Массив объектов Date от понедельника до воскресенья.
  */
 export function getWeekDays(date: Date): Date[] {
-  const weekStart = startOfWeek(date, { weekStartsOn: 1 }); // Неделя начинается с понедельника
+  const weekStart = startOfWeek(date, { weekStartsOn: 1 }); 
   const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
   return eachDayOfInterval({ start: weekStart, end: weekEnd });
 }
