@@ -1,0 +1,2464 @@
+====================================================================
+========== НАЧАЛО ВЫВОДА КОДА ПРОЕКТА './frontend' ==========
+====================================================================
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/tailwind.config.js
+--------------------------------------------------------------------
+/** @type {import('tailwindcss').Config} */
+import animatePlugin from "tailwindcss-animate";
+import defaultTheme from 'tailwindcss/defaultTheme';
+
+export default {
+  darkMode: ["class"],
+  content: [
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+  ],
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    extend: {
+      fontFamily: {
+        sans: ['Nunito', ...defaultTheme.fontFamily.sans],
+      },
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+    },
+  },
+  plugins: [animatePlugin],
+}
+
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/eslint.config.js
+--------------------------------------------------------------------
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+  },
+])
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/tsconfig.node.json
+--------------------------------------------------------------------
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true
+  },
+  "include": ["vite.config.ts"]
+}
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/components.json
+--------------------------------------------------------------------
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.js",
+    "css": "src/index.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "registries": {}
+}
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/vite.config.ts
+--------------------------------------------------------------------
+import path from "path"
+import react from "@vitejs/plugin-react"
+import { defineConfig } from "vite"
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+})
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/package.json
+--------------------------------------------------------------------
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-toggle": "^1.1.10",
+    "@radix-ui/react-toggle-group": "^1.1.11",
+    "@use-gesture/react": "^10.3.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.546.0",
+    "react": "^19.2.0",
+    "react-day-picker": "^9.11.1",
+    "react-dom": "^19.2.0",
+    "react-resizable-panels": "^3.0.6",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.8.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "@vitejs/plugin-react": "^5.0.4",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.38.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.11"
+  }
+}
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/tsconfig.json
+--------------------------------------------------------------------
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/utils/dateUtils.ts
+--------------------------------------------------------------------
+import { startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+
+/**
+ * Возвращает массив дат для недели, содержащей указанную дату.
+ * @param date - Любая дата внутри нужной недели.
+ * @returns Массив объектов Date от понедельника до воскресенья.
+ */
+export function getWeekDays(date: Date): Date[] {
+  const weekStart = startOfWeek(date, { weekStartsOn: 1 }); // Неделя начинается с понедельника
+  const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+  return eachDayOfInterval({ start: weekStart, end: weekEnd });
+}
+
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/DayCard.tsx
+--------------------------------------------------------------------
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
+
+interface DayCardProps {
+  date: Date;
+  onClick: () => void;
+  isActive: boolean;
+}
+
+export function DayCard({ date, onClick, isActive }: DayCardProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        p-4 rounded-lg text-center transition-all duration-300
+        ${isActive ? 'bg-primary text-primary-foreground scale-105 shadow-lg' : 'bg-card text-card-foreground hover:bg-muted'}
+      `}
+    >
+      <p className="text-sm font-medium capitalize text-muted-foreground">
+        {format(date, 'EEEE', { locale: ru })}
+      </p>
+      <p className="text-3xl font-bold">{format(date, 'dd')}</p>
+    </button>
+  );
+}
+
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/tabs.tsx
+--------------------------------------------------------------------
+import * as React from "react"
+import * as TabsPrimitive from "@radix-ui/react-tabs"
+
+import { cn } from "@/lib/utils"
+
+const Tabs = TabsPrimitive.Root
+
+const TabsList = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.List
+    ref={ref}
+    className={cn(
+      "inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
+      className
+    )}
+    {...props}
+  />
+))
+TabsList.displayName = TabsPrimitive.List.displayName
+
+const TabsTrigger = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
+      className
+    )}
+    {...props}
+  />
+))
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+
+const TabsContent = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Content
+    ref={ref}
+    className={cn(
+      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      className
+    )}
+    {...props}
+  />
+))
+TabsContent.displayName = TabsPrimitive.Content.displayName
+
+export { Tabs, TabsList, TabsTrigger, TabsContent }
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/calendar.tsx
+--------------------------------------------------------------------
+import * as React from "react"
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "lucide-react"
+import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
+
+import { cn } from "@/lib/utils"
+import { Button, buttonVariants } from "@/components/ui/button"
+
+function Calendar({
+  className,
+  classNames,
+  showOutsideDays = true,
+  captionLayout = "label",
+  buttonVariant = "ghost",
+  formatters,
+  components,
+  ...props
+}: React.ComponentProps<typeof DayPicker> & {
+  buttonVariant?: React.ComponentProps<typeof Button>["variant"]
+}) {
+  const defaultClassNames = getDefaultClassNames()
+
+  return (
+    <DayPicker
+      showOutsideDays={showOutsideDays}
+      className={cn(
+        "bg-background group/calendar p-3 [--cell-size:2rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
+        String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
+        String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
+        className
+      )}
+      captionLayout={captionLayout}
+      formatters={{
+        formatMonthDropdown: (date) =>
+          date.toLocaleString("default", { month: "short" }),
+        ...formatters,
+      }}
+      classNames={{
+        root: cn("w-fit", defaultClassNames.root),
+        months: cn(
+          "relative flex flex-col gap-4 md:flex-row",
+          defaultClassNames.months
+        ),
+        month: cn("flex w-full flex-col gap-4", defaultClassNames.month),
+        nav: cn(
+          "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1",
+          defaultClassNames.nav
+        ),
+        button_previous: cn(
+          buttonVariants({ variant: buttonVariant }),
+          "h-[--cell-size] w-[--cell-size] select-none p-0 aria-disabled:opacity-50",
+          defaultClassNames.button_previous
+        ),
+        button_next: cn(
+          buttonVariants({ variant: buttonVariant }),
+          "h-[--cell-size] w-[--cell-size] select-none p-0 aria-disabled:opacity-50",
+          defaultClassNames.button_next
+        ),
+        month_caption: cn(
+          "flex h-[--cell-size] w-full items-center justify-center px-[--cell-size]",
+          defaultClassNames.month_caption
+        ),
+        dropdowns: cn(
+          "flex h-[--cell-size] w-full items-center justify-center gap-1.5 text-sm font-medium",
+          defaultClassNames.dropdowns
+        ),
+        dropdown_root: cn(
+          "has-focus:border-ring border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] relative rounded-md border",
+          defaultClassNames.dropdown_root
+        ),
+        dropdown: cn(
+          "bg-popover absolute inset-0 opacity-0",
+          defaultClassNames.dropdown
+        ),
+        caption_label: cn(
+          "select-none font-medium",
+          captionLayout === "label"
+            ? "text-sm"
+            : "[&>svg]:text-muted-foreground flex h-8 items-center gap-1 rounded-md pl-2 pr-1 text-sm [&>svg]:size-3.5",
+          defaultClassNames.caption_label
+        ),
+        table: "w-full border-collapse",
+        weekdays: cn("flex", defaultClassNames.weekdays),
+        weekday: cn(
+          "text-muted-foreground flex-1 select-none rounded-md text-[0.8rem] font-normal",
+          defaultClassNames.weekday
+        ),
+        week: cn("mt-2 flex w-full", defaultClassNames.week),
+        week_number_header: cn(
+          "w-[--cell-size] select-none",
+          defaultClassNames.week_number_header
+        ),
+        week_number: cn(
+          "text-muted-foreground select-none text-[0.8rem]",
+          defaultClassNames.week_number
+        ),
+        day: cn(
+          "group/day relative aspect-square h-full w-full select-none p-0 text-center [&:first-child[data-selected=true]_button]:rounded-l-md [&:last-child[data-selected=true]_button]:rounded-r-md",
+          defaultClassNames.day
+        ),
+        range_start: cn(
+          "bg-accent rounded-l-md",
+          defaultClassNames.range_start
+        ),
+        range_middle: cn("rounded-none", defaultClassNames.range_middle),
+        range_end: cn("bg-accent rounded-r-md", defaultClassNames.range_end),
+        today: cn(
+          "bg-accent text-accent-foreground rounded-md data-[selected=true]:rounded-none",
+          defaultClassNames.today
+        ),
+        outside: cn(
+          "text-muted-foreground aria-selected:text-muted-foreground",
+          defaultClassNames.outside
+        ),
+        disabled: cn(
+          "text-muted-foreground opacity-50",
+          defaultClassNames.disabled
+        ),
+        hidden: cn("invisible", defaultClassNames.hidden),
+        ...classNames,
+      }}
+      components={{
+        Root: ({ className, rootRef, ...props }) => {
+          return (
+            <div
+              data-slot="calendar"
+              ref={rootRef}
+              className={cn(className)}
+              {...props}
+            />
+          )
+        },
+        Chevron: ({ className, orientation, ...props }) => {
+          if (orientation === "left") {
+            return (
+              <ChevronLeftIcon className={cn("size-4", className)} {...props} />
+            )
+          }
+
+          if (orientation === "right") {
+            return (
+              <ChevronRightIcon
+                className={cn("size-4", className)}
+                {...props}
+              />
+            )
+          }
+
+          return (
+            <ChevronDownIcon className={cn("size-4", className)} {...props} />
+          )
+        },
+        DayButton: CalendarDayButton,
+        WeekNumber: ({ children, ...props }) => {
+          return (
+            <td {...props}>
+              <div className="flex size-[--cell-size] items-center justify-center text-center">
+                {children}
+              </div>
+            </td>
+          )
+        },
+        ...components,
+      }}
+      {...props}
+    />
+  )
+}
+
+function CalendarDayButton({
+  className,
+  day,
+  modifiers,
+  ...props
+}: React.ComponentProps<typeof DayButton>) {
+  const defaultClassNames = getDefaultClassNames()
+
+  const ref = React.useRef<HTMLButtonElement>(null)
+  React.useEffect(() => {
+    if (modifiers.focused) ref.current?.focus()
+  }, [modifiers.focused])
+
+  return (
+    <Button
+      ref={ref}
+      variant="ghost"
+      size="icon"
+      data-day={day.date.toLocaleDateString()}
+      data-selected-single={
+        modifiers.selected &&
+        !modifiers.range_start &&
+        !modifiers.range_end &&
+        !modifiers.range_middle
+      }
+      data-range-start={modifiers.range_start}
+      data-range-end={modifiers.range_end}
+      data-range-middle={modifiers.range_middle}
+      className={cn(
+        "data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 flex aspect-square h-auto w-full min-w-[--cell-size] flex-col gap-1 font-normal leading-none data-[range-end=true]:rounded-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] [&>span]:text-xs [&>span]:opacity-70",
+        defaultClassNames.day,
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Calendar, CalendarDayButton }
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/toggle.tsx
+--------------------------------------------------------------------
+"use client"
+
+import * as React from "react"
+import * as TogglePrimitive from "@radix-ui/react-toggle"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const toggleVariants = cva(
+  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium hover:bg-muted hover:text-muted-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap",
+  {
+    variants: {
+      variant: {
+        default: "bg-transparent",
+        outline:
+          "border border-input bg-transparent shadow-xs hover:bg-accent hover:text-accent-foreground",
+      },
+      size: {
+        default: "h-9 px-2 min-w-9",
+        sm: "h-8 px-1.5 min-w-8",
+        lg: "h-10 px-2.5 min-w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function Toggle({
+  className,
+  variant,
+  size,
+  ...props
+}: React.ComponentProps<typeof TogglePrimitive.Root> &
+  VariantProps<typeof toggleVariants>) {
+  return (
+    <TogglePrimitive.Root
+      data-slot="toggle"
+      className={cn(toggleVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Toggle, toggleVariants }
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/popover.tsx
+--------------------------------------------------------------------
+import * as React from "react"
+import * as PopoverPrimitive from "@radix-ui/react-popover"
+
+import { cn } from "@/lib/utils"
+
+const Popover = PopoverPrimitive.Root
+
+const PopoverTrigger = PopoverPrimitive.Trigger
+
+const PopoverAnchor = PopoverPrimitive.Anchor
+
+const PopoverContent = React.forwardRef<
+  React.ElementRef<typeof PopoverPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
+>(({ className, align = "center", sideOffset = 4, ...props }, ref) => (
+  <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Content
+      ref={ref}
+      align={align}
+      sideOffset={sideOffset}
+      className={cn(
+        "z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-popover-content-transform-origin]",
+        className
+      )}
+      {...props}
+    />
+  </PopoverPrimitive.Portal>
+))
+PopoverContent.displayName = PopoverPrimitive.Content.displayName
+
+export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor }
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/button.tsx
+--------------------------------------------------------------------
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-8",
+        icon: "h-9 w-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/table.tsx
+--------------------------------------------------------------------
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Table = React.forwardRef<
+  HTMLTableElement,
+  React.HTMLAttributes<HTMLTableElement>
+>(({ className, ...props }, ref) => (
+  <div className="relative w-full overflow-auto">
+    <table
+      ref={ref}
+      className={cn("w-full caption-bottom text-sm", className)}
+      {...props}
+    />
+  </div>
+))
+Table.displayName = "Table"
+
+const TableHeader = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(({ className, ...props }, ref) => (
+  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
+))
+TableHeader.displayName = "TableHeader"
+
+const TableBody = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(({ className, ...props }, ref) => (
+  <tbody
+    ref={ref}
+    className={cn("[&_tr:last-child]:border-0", className)}
+    {...props}
+  />
+))
+TableBody.displayName = "TableBody"
+
+const TableFooter = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(({ className, ...props }, ref) => (
+  <tfoot
+    ref={ref}
+    className={cn(
+      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+      className
+    )}
+    {...props}
+  />
+))
+TableFooter.displayName = "TableFooter"
+
+const TableRow = React.forwardRef<
+  HTMLTableRowElement,
+  React.HTMLAttributes<HTMLTableRowElement>
+>(({ className, ...props }, ref) => (
+  <tr
+    ref={ref}
+    className={cn(
+      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      className
+    )}
+    {...props}
+  />
+))
+TableRow.displayName = "TableRow"
+
+const TableHead = React.forwardRef<
+  HTMLTableCellElement,
+  React.ThHTMLAttributes<HTMLTableCellElement>
+>(({ className, ...props }, ref) => (
+  <th
+    ref={ref}
+    className={cn(
+      "h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      className
+    )}
+    {...props}
+  />
+))
+TableHead.displayName = "TableHead"
+
+const TableCell = React.forwardRef<
+  HTMLTableCellElement,
+  React.TdHTMLAttributes<HTMLTableCellElement>
+>(({ className, ...props }, ref) => (
+  <td
+    ref={ref}
+    className={cn(
+      "p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      className
+    )}
+    {...props}
+  />
+))
+TableCell.displayName = "TableCell"
+
+const TableCaption = React.forwardRef<
+  HTMLTableCaptionElement,
+  React.HTMLAttributes<HTMLTableCaptionElement>
+>(({ className, ...props }, ref) => (
+  <caption
+    ref={ref}
+    className={cn("mt-4 text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+TableCaption.displayName = "TableCaption"
+
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+}
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/dialog.tsx
+--------------------------------------------------------------------
+"use client"
+
+import * as React from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const Dialog = DialogPrimitive.Root
+
+const DialogTrigger = DialogPrimitive.Trigger
+
+const DialogPortal = DialogPrimitive.Portal
+
+const DialogClose = DialogPrimitive.Close
+
+const DialogOverlay = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn(
+      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
+    {...props}
+  />
+))
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
+const DialogContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <DialogPortal>
+    <DialogOverlay />
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </DialogPrimitive.Close>
+    </DialogPrimitive.Content>
+  </DialogPortal>
+))
+DialogContent.displayName = DialogPrimitive.Content.displayName
+
+const DialogHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col space-y-1.5 text-center sm:text-left",
+      className
+    )}
+    {...props}
+  />
+)
+DialogHeader.displayName = "DialogHeader"
+
+const DialogFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    )}
+    {...props}
+  />
+)
+DialogFooter.displayName = "DialogFooter"
+
+const DialogTitle = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn(
+      "text-lg font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
+))
+DialogTitle.displayName = DialogPrimitive.Title.displayName
+
+const DialogDescription = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+DialogDescription.displayName = DialogPrimitive.Description.displayName
+
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogTrigger,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+}
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/select.tsx
+--------------------------------------------------------------------
+"use client"
+
+import * as React from "react"
+import * as SelectPrimitive from "@radix-ui/react-select"
+import { Check, ChevronDown, ChevronUp } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const Select = SelectPrimitive.Root
+
+const SelectGroup = SelectPrimitive.Group
+
+const SelectValue = SelectPrimitive.Value
+
+const SelectTrigger = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
+>(({ className, children, ...props }, ref) => (
+  <SelectPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      className
+    )}
+    {...props}
+  >
+    {children}
+    <SelectPrimitive.Icon asChild>
+      <ChevronDown className="h-4 w-4 opacity-50" />
+    </SelectPrimitive.Icon>
+  </SelectPrimitive.Trigger>
+))
+SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
+
+const SelectScrollUpButton = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.ScrollUpButton>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.ScrollUpButton
+    ref={ref}
+    className={cn(
+      "flex cursor-default items-center justify-center py-1",
+      className
+    )}
+    {...props}
+  >
+    <ChevronUp className="h-4 w-4" />
+  </SelectPrimitive.ScrollUpButton>
+))
+SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName
+
+const SelectScrollDownButton = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.ScrollDownButton>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.ScrollDownButton
+    ref={ref}
+    className={cn(
+      "flex cursor-default items-center justify-center py-1",
+      className
+    )}
+    {...props}
+  >
+    <ChevronDown className="h-4 w-4" />
+  </SelectPrimitive.ScrollDownButton>
+))
+SelectScrollDownButton.displayName =
+  SelectPrimitive.ScrollDownButton.displayName
+
+const SelectContent = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
+>(({ className, children, position = "popper", ...props }, ref) => (
+  <SelectPrimitive.Portal>
+    <SelectPrimitive.Content
+      ref={ref}
+      className={cn(
+        "relative z-50 max-h-[--radix-select-content-available-height] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]",
+        position === "popper" &&
+          "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+        className
+      )}
+      position={position}
+      {...props}
+    >
+      <SelectScrollUpButton />
+      <SelectPrimitive.Viewport
+        className={cn(
+          "p-1",
+          position === "popper" &&
+            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+        )}
+      >
+        {children}
+      </SelectPrimitive.Viewport>
+      <SelectScrollDownButton />
+    </SelectPrimitive.Content>
+  </SelectPrimitive.Portal>
+))
+SelectContent.displayName = SelectPrimitive.Content.displayName
+
+const SelectLabel = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Label>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Label
+    ref={ref}
+    className={cn("px-2 py-1.5 text-sm font-semibold", className)}
+    {...props}
+  />
+))
+SelectLabel.displayName = SelectPrimitive.Label.displayName
+
+const SelectItem = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
+>(({ className, children, ...props }, ref) => (
+  <SelectPrimitive.Item
+    ref={ref}
+    className={cn(
+      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      className
+    )}
+    {...props}
+  >
+    <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+      <SelectPrimitive.ItemIndicator>
+        <Check className="h-4 w-4" />
+      </SelectPrimitive.ItemIndicator>
+    </span>
+    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+  </SelectPrimitive.Item>
+))
+SelectItem.displayName = SelectPrimitive.Item.displayName
+
+const SelectSeparator = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Separator>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Separator
+    ref={ref}
+    className={cn("-mx-1 my-1 h-px bg-muted", className)}
+    {...props}
+  />
+))
+SelectSeparator.displayName = SelectPrimitive.Separator.displayName
+
+export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+  SelectScrollUpButton,
+  SelectScrollDownButton,
+}
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/resizable.tsx
+--------------------------------------------------------------------
+import { GripVertical } from "lucide-react"
+import * as ResizablePrimitive from "react-resizable-panels"
+
+import { cn } from "@/lib/utils"
+
+const ResizablePanelGroup = ({
+  className,
+  ...props
+}: React.ComponentProps<typeof ResizablePrimitive.PanelGroup>) => (
+  <ResizablePrimitive.PanelGroup
+    className={cn(
+      "flex h-full w-full data-[panel-group-direction=vertical]:flex-col",
+      className
+    )}
+    {...props}
+  />
+)
+
+const ResizablePanel = ResizablePrimitive.Panel
+
+const ResizableHandle = ({
+  withHandle,
+  className,
+  ...props
+}: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> & {
+  withHandle?: boolean
+}) => (
+  <ResizablePrimitive.PanelResizeHandle
+    className={cn(
+      "relative flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0 [&[data-panel-group-direction=vertical]>div]:rotate-90",
+      className
+    )}
+    {...props}
+  >
+    {withHandle && (
+      <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border bg-border">
+        <GripVertical className="h-2.5 w-2.5" />
+      </div>
+    )}
+  </ResizablePrimitive.PanelResizeHandle>
+)
+
+export { ResizablePanelGroup, ResizablePanel, ResizableHandle }
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/command.tsx
+--------------------------------------------------------------------
+"use client"
+
+import * as React from "react"
+import { type DialogProps } from "@radix-ui/react-dialog"
+import { Command as CommandPrimitive } from "cmdk"
+import { Search } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+
+const Command = React.forwardRef<
+  React.ElementRef<typeof CommandPrimitive>,
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive>
+>(({ className, ...props }, ref) => (
+  <CommandPrimitive
+    ref={ref}
+    className={cn(
+      "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
+      className
+    )}
+    {...props}
+  />
+))
+Command.displayName = CommandPrimitive.displayName
+
+const CommandDialog = ({ children, ...props }: DialogProps) => {
+  return (
+    <Dialog {...props}>
+      <DialogContent className="overflow-hidden p-0">
+        <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+          {children}
+        </Command>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+const CommandInput = React.forwardRef<
+  React.ElementRef<typeof CommandPrimitive.Input>,
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
+>(({ className, ...props }, ref) => (
+  <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    <CommandPrimitive.Input
+      ref={ref}
+      className={cn(
+        "flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+      {...props}
+    />
+  </div>
+))
+
+CommandInput.displayName = CommandPrimitive.Input.displayName
+
+const CommandList = React.forwardRef<
+  React.ElementRef<typeof CommandPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
+>(({ className, ...props }, ref) => (
+  <CommandPrimitive.List
+    ref={ref}
+    className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
+    {...props}
+  />
+))
+
+CommandList.displayName = CommandPrimitive.List.displayName
+
+const CommandEmpty = React.forwardRef<
+  React.ElementRef<typeof CommandPrimitive.Empty>,
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
+>((props, ref) => (
+  <CommandPrimitive.Empty
+    ref={ref}
+    className="py-6 text-center text-sm"
+    {...props}
+  />
+))
+
+CommandEmpty.displayName = CommandPrimitive.Empty.displayName
+
+const CommandGroup = React.forwardRef<
+  React.ElementRef<typeof CommandPrimitive.Group>,
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
+>(({ className, ...props }, ref) => (
+  <CommandPrimitive.Group
+    ref={ref}
+    className={cn(
+      "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
+      className
+    )}
+    {...props}
+  />
+))
+
+CommandGroup.displayName = CommandPrimitive.Group.displayName
+
+const CommandSeparator = React.forwardRef<
+  React.ElementRef<typeof CommandPrimitive.Separator>,
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
+>(({ className, ...props }, ref) => (
+  <CommandPrimitive.Separator
+    ref={ref}
+    className={cn("-mx-1 h-px bg-border", className)}
+    {...props}
+  />
+))
+CommandSeparator.displayName = CommandPrimitive.Separator.displayName
+
+const CommandItem = React.forwardRef<
+  React.ElementRef<typeof CommandPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
+>(({ className, ...props }, ref) => (
+  <CommandPrimitive.Item
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      className
+    )}
+    {...props}
+  />
+))
+
+CommandItem.displayName = CommandPrimitive.Item.displayName
+
+const CommandShortcut = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLSpanElement>) => {
+  return (
+    <span
+      className={cn(
+        "ml-auto text-xs tracking-widest text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+CommandShortcut.displayName = "CommandShortcut"
+
+export {
+  Command,
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandShortcut,
+  CommandSeparator,
+}
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/ui/toggle-group.tsx
+--------------------------------------------------------------------
+import * as React from "react"
+import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
+import { type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+import { toggleVariants } from "@/components/ui/toggle"
+
+const ToggleGroupContext = React.createContext<
+  VariantProps<typeof toggleVariants>
+>({
+  size: "default",
+  variant: "default",
+})
+
+const ToggleGroup = React.forwardRef<
+  React.ElementRef<typeof ToggleGroupPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> &
+    VariantProps<typeof toggleVariants>
+>(({ className, variant, size, children, ...props }, ref) => (
+  <ToggleGroupPrimitive.Root
+    ref={ref}
+    className={cn("flex items-center justify-center gap-1", className)}
+    {...props}
+  >
+    <ToggleGroupContext.Provider value={{ variant, size }}>
+      {children}
+    </ToggleGroupContext.Provider>
+  </ToggleGroupPrimitive.Root>
+))
+
+ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName
+
+const ToggleGroupItem = React.forwardRef<
+  React.ElementRef<typeof ToggleGroupPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Item> &
+    VariantProps<typeof toggleVariants>
+>(({ className, children, variant, size, ...props }, ref) => {
+  const context = React.useContext(ToggleGroupContext)
+
+  return (
+    <ToggleGroupPrimitive.Item
+      ref={ref}
+      className={cn(
+        toggleVariants({
+          variant: context.variant || variant,
+          size: context.size || size,
+        }),
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </ToggleGroupPrimitive.Item>
+  )
+})
+
+ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName
+
+export { ToggleGroup, ToggleGroupItem }
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/components/Calendar.tsx
+--------------------------------------------------------------------
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+  format,
+  addMonths,
+  subMonths,
+} from 'date-fns';
+import { holidays } from '@/data/mockData';
+
+interface CalendarProps {
+  onDateSelect: (date: Date) => void;
+}
+
+export function Calendar({ onDateSelect }: CalendarProps) {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+
+  const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+  const handleDateClick = (day: Date) => {
+    setSelectedDate(day);
+    onDateSelect(day);
+  };
+
+  const isHoliday = (day: Date) => {
+    const dateString = day.toISOString().split('T')[0];
+    return holidays.includes(dateString);
+  };
+  
+  const isWeekend = (day: Date) => {
+    return day.getDay() === 0 || day.getDay() === 6;
+  }
+
+  const selectedWeekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
+  const selectedWeekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
+
+  const isInSelectedWeek = (day: Date) => {
+    return day >= selectedWeekStart && day <= selectedWeekEnd;
+  };
+
+  return (
+    <div className="p-4 rounded-lg bg-card text-card-foreground">
+      <div className="flex items-center justify-between mb-4">
+        <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="text-lg font-semibold">
+          {format(currentMonth, 'MMMM yyyy')}
+        </h2>
+        <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-7 text-center text-sm text-muted-foreground mb-2">
+        <div>Пн</div>
+        <div>Вт</div>
+        <div>Ср</div>
+        <div>Чт</div>
+        <div>Пт</div>
+        <div>Сб</div>
+        <div>Вс</div>
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((day) => (
+          <button
+            key={day.toString()}
+            onClick={() => handleDateClick(day)}
+            className={`
+              h-10 w-10 flex items-center justify-center rounded-md transition-all
+              ${!isSameMonth(day, currentMonth) ? 'text-muted-foreground/50' : ''}
+              ${isInSelectedWeek(day) ? 'bg-primary/20' : ''}
+              ${isSameDay(day, selectedDate) ? 'bg-primary text-primary-foreground' : ''}
+              ${isHoliday(day) ? 'bg-red-500/20 text-red-500' : ''}
+              ${isWeekend(day) && !isHoliday(day) ? 'text-muted-foreground' : ''}
+              hover:bg-primary/10
+            `}
+          >
+            {format(day, 'd')}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/index.css
+--------------------------------------------------------------------
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    /* Accent color changed to green */
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 142.1 76.2% 36.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    /* Accent color changed to green for dark mode */
+    --primary: 142.1 70.6% 45.3%;
+    --primary-foreground: 144.9 80.4% 10%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 142.1 70.6% 45.3%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/views/DayView.tsx
+--------------------------------------------------------------------
+import { ArrowLeft, Coffee, ArrowUp, ArrowDown, ChevronLeft, Hand } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { format, addDays, subDays } from 'date-fns';
+import { ro } from 'date-fns/locale';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRef, useState } from 'react';
+
+// --- DATA (Moved from mockData.ts to fix import error) ---
+export interface ScheduleEntry {
+  time: string;
+  subject: string;
+  type: 'Лекция' | 'Практика' | 'Лаб.';
+  professor: string;
+  classroom: string;
+}
+
+export interface ScheduleData {
+  [date: string]: ScheduleEntry[];
+}
+
+export const scheduleData: ScheduleData = {
+  '2025-10-20': [
+    { time: '08:00', subject: 'Базы данных', type: 'Лекция', professor: 'Проф. Иванов', classroom: '301' },
+    { time: '09:45', subject: 'Веб-программирование', type: 'Практика', professor: 'Проф. Петров', classroom: '404-А' },
+    { time: '11:30', subject: 'Английский язык', type: 'Практика', professor: 'Проф. Сидорова', classroom: '202' },
+  ],
+  '2025-10-21': [
+    { time: '09:45', subject: 'Операционные системы', type: 'Лекция', professor: 'Проф. Смирнов', classroom: '501' },
+    { time: '11:30', subject: 'Компьютерные сети', type: 'Лаб.', professor: 'Проф. Кузнецов', classroom: '101-Л' },
+  ],
+  '2025-10-22': [], // Среда - свободный день
+  '2025-10-23': [
+    { time: '08:00', subject: 'Базы данных', type: 'Лаб.', professor: 'Проф. Иванов', classroom: '303-Л' },
+    { time: '09:45', subject: 'Физическая культура', type: 'Практика', professor: 'Доц. Васильев', classroom: 'Спортзал' },
+  ],
+  '2025-10-24': [
+    { time: '11:30', subject: 'Веб-программирование', type: 'Лекция', professor: 'Проф. Петров', classroom: '404-А' },
+    { time: '13:15', subject: 'Операционные системы', type: 'Практика', professor: 'Проф. Смирнов', classroom: '505' },
+  ],
+};
+// --- END DATA ---
+
+
+// Helper to get schedule for any date
+const getScheduleForDate = (date: Date): ScheduleEntry[] => {
+  const dateString = date.toISOString().split('T')[0];
+  return scheduleData[dateString] || [];
+};
+
+interface DayViewProps {
+  date: Date;
+  onBack: () => void;
+  onDateChange: (newDate: Date) => void;
+}
+
+const slideVariants = {
+    enter: (direction: number) => ({
+        y: direction > 0 ? "100%" : "-100%",
+    }),
+    center: {
+        zIndex: 1,
+        y: "0%",
+    },
+    exit: (direction: number) => ({
+        zIndex: 0,
+        y: direction < 0 ? "100%" : "-100%",
+    })
+};
+
+// A new component to render the content of a single day
+const DayPage = ({ date, schedule }: { date: Date, schedule: ScheduleEntry[] }) => (
+  <div className="flex flex-col h-full w-full bg-background p-1 sm:p-4">
+    {/* Header */}
+    <div className="flex-shrink-0 flex items-center mb-2 sm:mb-4">
+      <h1 className="text-xl sm:text-2xl font-bold capitalize">
+        {format(date, 'EEEE', { locale: ro })}
+      </h1>
+      <p className="text-sm text-muted-foreground ml-4">{format(date, 'd MMMM yyyy', { locale: ro })}</p>
+    </div>
+
+    {/* Schedule Grid */}
+    <div className="flex-grow grid grid-rows-7 gap-2">
+      {[...Array(7)].map((_, i) => {
+        const timeSlot = ["08:00", "09:45", "11:30", "13:15", "15:00", "16:45", "18:30"][i];
+        const lesson = schedule.find((item) => item.time === timeSlot);
+        return lesson ? (
+          <div key={timeSlot} className="flex items-center p-2 sm:p-4 rounded-lg bg-card border">
+            <div className="flex flex-col items-center justify-center w-12 sm:w-16 mr-2 sm:mr-4">
+              <span className="font-bold text-sm sm:text-lg">{lesson.time}</span>
+              <span className="text-xs text-muted-foreground">{lesson.type}</span>
+            </div>
+            <div className="flex-grow">
+              <h3 className="font-semibold text-sm sm:text-base">{lesson.subject}</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">{lesson.professor}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">{lesson.classroom}</p>
+            </div>
+          </div>
+        ) : (
+          <div key={timeSlot} className="flex items-center p-2 sm:p-4 rounded-lg bg-card/50 border border-dashed">
+            <div className="flex flex-col items-center justify-center w-12 sm:w-16 mr-2 sm:mr-4">
+              <span className="font-bold text-sm sm:text-lg text-muted-foreground/50">{timeSlot}</span>
+            </div>
+            <div className="flex-grow flex items-center justify-center text-muted-foreground">
+              <Coffee className="h-4 w-4 mr-2" />
+              <span className="text-xs sm:text-sm">Fără perechi</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
+
+export function DayView({ date, onBack, onDateChange }: DayViewProps) {
+  const direction = useRef(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const paginate = (newDirection: number) => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    direction.current = newDirection;
+    onDateChange(newDirection > 0 ? addDays(date, 1) : subDays(date, 1));
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-background touch-none">
+      {/* Header outside of the draggable area */}
+      <div className="flex-shrink-0 flex items-center p-2 sm:p-4">
+        <Button variant="ghost" size="icon" onClick={onBack} className="lg:hidden">
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+      </div>
+
+      <div className="flex-grow relative overflow-hidden">
+        <AnimatePresence 
+            initial={false} 
+            custom={direction.current}
+            onExitComplete={() => setIsAnimating(false)}
+        >
+          <motion.div
+            className='h-full absolute w-full'
+            key={date.toISOString()}
+            custom={direction.current}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+                y: { type: "spring", stiffness: 350, damping: 35 }
+            }}
+            drag={isAnimating ? false : "y"}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.1}
+            onDragEnd={(e, { offset, velocity }) => {
+                if (isAnimating) return;
+
+                if (Math.abs(offset.x) > Math.abs(offset.y)) {
+                    if (offset.x < -50) {
+                        onBack();
+                    }
+                    return;
+                }
+                
+                const swipeThreshold = 50;
+                if (Math.abs(offset.y) > swipeThreshold && Math.abs(velocity.y) > 0.3) {
+                    if (offset.y < 0) {
+                        paginate(1); // Swipe Up -> Next Day
+                    } else {
+                        paginate(-1); // Swipe Down -> Previous Day
+                    }
+                }
+            }}
+          >
+            <DayPage date={date} schedule={getScheduleForDate(date)} />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Swipe hint for mobile */}
+      <div className="flex-shrink-0 lg:hidden flex justify-center items-center pt-2 pb-2 text-muted-foreground">
+        <div className='flex flex-col animate-pulse'>
+            <ArrowUp className="h-4 w-4" />
+            <ArrowDown className="h-4 w-4" />
+        </div>
+        <span className="text-xs font-semibold text-center mx-2">sau</span>
+        <div className='flex items-center animate-pulse'>
+            <ChevronLeft className="h-4 w-4" />
+            <Hand className="h-5 w-5" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/views/WeekView.tsx
+--------------------------------------------------------------------
+import { useState } from 'react';
+import { Calendar } from '@/components/Calendar';
+import { DayCard } from '@/components/DayCard';
+import { getWeekDays } from '@/utils/dateUtils';
+import { isSameDay } from 'date-fns';
+
+interface WeekViewProps {
+  onDaySelect: (date: Date) => void;
+}
+
+export function WeekView({ onDaySelect }: WeekViewProps) {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const week = getWeekDays(selectedDate);
+
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+  };
+  
+  return (
+    <div className="flex flex-col h-full p-4">
+      <header className="mb-4">
+        <h1 className="text-3xl font-bold">Расписание</h1>
+        <p className="text-muted-foreground">Выберите неделю в календаре или день ниже</p>
+      </header>
+
+      <div className="mb-6">
+        <Calendar onDateSelect={handleDateChange} />
+      </div>
+
+      <div className="grid grid-cols-3 sm:grid-cols-7 gap-2">
+        {week.map((day) => (
+          <DayCard
+            key={day.toString()}
+            date={day}
+            isActive={isSameDay(day, selectedDate)}
+            onClick={() => onDaySelect(day)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/data/mockData.ts
+--------------------------------------------------------------------
+// Определяем тип для записи в расписании
+export interface ScheduleEntry {
+  time: string;
+  subject: string;
+  type: 'Лекция' | 'Практика' | 'Лаб.';
+  professor: string;
+  classroom: string;
+}
+
+// Определяем тип для всего расписания
+export interface ScheduleData {
+  [date: string]: ScheduleEntry[];
+}
+
+// Временные данные для расписания
+export const scheduleData: ScheduleData = {
+  '2025-10-20': [
+    { time: '08:00', subject: 'Базы данных', type: 'Лекция', professor: 'Проф. Иванов', classroom: '301' },
+    { time: '09:45', subject: 'Веб-программирование Веб-программирование', type: 'Практика', professor: 'Проф. Петров', classroom: '404-А' },
+    { time: '11:30', subject: 'Английский язык', type: 'Практика', professor: 'Проф. Сидорова', classroom: '202' },
+  ],
+  '2025-10-21': [
+    { time: '09:45', subject: 'Операционные системы', type: 'Лекция', professor: 'Проф. Смирнов', classroom: '501' },
+    { time: '11:30', subject: 'Компьютерные сети', type: 'Лаб.', professor: 'Проф. Кузнецов', classroom: '101-Л' },
+  ],
+  '2025-10-22': [], // Среда - свободный день
+  '2025-10-23': [
+    { time: '08:00', subject: 'Базы данных', type: 'Лаб.', professor: 'Проф. Иванов', classroom: '303-Л' },
+    { time: '09:45', subject: 'Физическая культура', type: 'Практика', professor: 'Доц. Васильев', classroom: 'Спортзал' },
+  ],
+  '2025-10-24': [
+    { time: '11:30', subject: 'Веб-программирование', type: 'Лекция', professor: 'Проф. Петров', classroom: '404-А' },
+    { time: '13:15', subject: 'Операционные системы', type: 'Практика', professor: 'Проф. Смирнов', classroom: '505' },
+  ],
+};
+
+// Временные данные для праздников и выходных (формат: YYYY-MM-DD)
+export const holidays: string[] = [
+  '2025-10-27', // Пример праздника
+];
+
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/App.tsx
+--------------------------------------------------------------------
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Button } from "@/components/ui/button";
+import { Calendar as CalendarIcon, Search, Printer, BookOpen, CalendarClock, MoreHorizontal, ArrowLeft, Coffee, ArrowUp, ArrowDown, ChevronLeft, Hand } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { 
+  ToggleGroup, 
+  ToggleGroupItem 
+} from "@/components/ui/toggle-group";
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import { cn } from "@/lib/utils";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addDays, subDays } from 'date-fns';
+import { ro } from 'date-fns/locale';
+import { useDrag } from '@use-gesture/react';
+
+// --- TYPE DEFINITIONS ---
+export interface ScheduleEntry {
+  time: string;
+  subject: string;
+  type: 'Лекция' | 'Практика' | 'Лаб.';
+  professor: string;
+  classroom: string;
+}
+
+export interface ScheduleData {
+  [date: string]: ScheduleEntry[];
+}
+// --- END TYPE DEFINITIONS ---
+
+
+// --- DayView Component ---
+const slideVariants = {
+    enter: (direction: number) => ({
+        y: direction > 0 ? "100%" : "-100%",
+    }),
+    center: {
+        zIndex: 1,
+        y: "0%",
+    },
+    exit: (direction: number) => ({
+        zIndex: 0,
+        y: direction < 0 ? "100%" : "-100%",
+    })
+};
+
+const DayPage = ({ date, schedule }: { date: Date, schedule: ScheduleEntry[] }) => (
+  <div className="flex flex-col h-full w-full bg-background p-1 sm:p-4">
+    <div className="flex-shrink-0 flex items-center mb-2 sm:mb-4">
+      <h1 className="text-xl sm:text-2xl font-bold capitalize">
+        {format(date, 'EEEE', { locale: ro })}
+      </h1>
+      <p className="text-sm text-muted-foreground ml-4">{format(date, 'd MMMM yyyy', { locale: ro })}</p>
+    </div>
+    <div className="flex-grow flex flex-col gap-2">
+      {[...Array(7)].map((_, i) => {
+        const timeSlot = ["08:00", "09:45", "11:30", "13:15", "15:00", "16:45", "18:30"][i];
+        const lesson = schedule.find((item) => item.time === timeSlot);
+        return lesson ? (
+          <div key={timeSlot} className="flex items-center p-2 sm:p-3 rounded-lg bg-card border flex-grow min-h-0">
+            <div className="flex flex-col items-center justify-center w-14 sm:w-20 mr-2 sm:mr-4 flex-shrink-0">
+              <span className="font-bold text-sm sm:text-lg">{lesson.time}</span>
+              <span className="text-xs text-muted-foreground">{lesson.type}</span>
+            </div>
+            <div className="flex-grow">
+              <h3 className="font-semibold text-sm sm:text-base break-words">{lesson.subject}</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">{lesson.professor}</p>
+            </div>
+            <div className="flex-shrink-0 w-16 text-center">
+                <span className="font-semibold text-sm sm:text-base">{lesson.classroom}</span>
+            </div>
+          </div>
+        ) : (
+          <div key={timeSlot} className="flex items-center p-2 sm:p-3 rounded-lg bg-card/50 border border-dashed flex-grow min-h-0">
+            <div className="flex flex-col items-center justify-center w-14 sm:w-20 mr-2 sm:mr-4 flex-shrink-0">
+              <span className="font-bold text-sm sm:text-lg text-muted-foreground/50">{timeSlot}</span>
+            </div>
+            <div className="flex-grow flex items-center justify-center text-muted-foreground">
+              <Coffee className="h-4 w-4 mr-2" />
+              <span className="text-xs sm:text-sm">Fără perechi</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
+
+function DayView({ date, onBack, onDateChange, getScheduleForDate }: { date: Date; onBack: () => void; onDateChange: (newDate: Date) => void; getScheduleForDate: (date: Date | null) => ScheduleEntry[] }) {
+  const direction = useRef(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const paginate = (newDirection: number) => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    direction.current = newDirection;
+    onDateChange(newDirection > 0 ? addDays(date, 1) : subDays(date, 1));
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-background touch-none">
+      <div className="flex-shrink-0 flex items-center p-2 sm:p-4">
+        <Button variant="ghost" size="icon" onClick={onBack} className="lg:hidden">
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+      </div>
+      <div className="flex-grow relative overflow-hidden">
+        <AnimatePresence 
+            initial={false} 
+            custom={direction.current}
+            onExitComplete={() => setIsAnimating(false)}
+        >
+          <motion.div
+            className='h-full absolute w-full'
+            key={date.toISOString()}
+            custom={direction.current}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ y: { type: "spring", stiffness: 350, damping: 35 } }}
+            drag={isAnimating ? false : "y"}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.1}
+            onDragEnd={(e, { offset, velocity }) => {
+                if (isAnimating) return;
+                if (Math.abs(offset.x) > Math.abs(offset.y)) {
+                    if (offset.x > 50) {
+                        onBack();
+                    }
+                    return;
+                }
+                const swipeThreshold = 50;
+                if (Math.abs(offset.y) > swipeThreshold && Math.abs(velocity.y) > 0.3) {
+                    if (offset.y < 0) {
+                        paginate(1);
+                    } else {
+                        paginate(-1);
+                    }
+                }
+            }}
+          >
+            <DayPage date={date} schedule={getScheduleForDate(date)} />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      <div className="flex-shrink-0 lg:hidden flex justify-center items-center pt-2 pb-2 text-muted-foreground">
+        <div className='flex flex-col animate-pulse'>
+            <ArrowUp className="h-4 w-4" />
+            <ArrowDown className="h-4 w-4" />
+        </div>
+        <span className="text-xs font-semibold text-center mx-2">sau</span>
+        <div className='flex items-center animate-pulse'>
+            <ChevronLeft className="h-4 w-4" />
+            <Hand className="h-5 w-5" />
+        </div>
+      </div>
+    </div>
+  );
+}
+// --- END DayView ---
+
+
+// --- Helper Data ---
+const MOCK_SEARCH_DATA = {
+  grupe: ["TI-211", "TI-212", "TI-213", "TI-214", "INF-221", "INF-222"],
+  profesori: ["Prof. Ivanov", "Prof. Petrov", "Prof. Sidorova", "Prof. Smirnov"],
+  aule: ["301", "404-А", "202", "501", "101-Л"],
+};
+
+type SearchType = "grupe" | "profesori" | "aule";
+
+const getLessonAbbreviation = (type: 'Лекция' | 'Практика' | 'Лаб.'): string => {
+    switch (type) {
+        case 'Лекция': return 'P';
+        case 'Практика': return 'S';
+        case 'Лаб.': return 'L';
+        default: return '?';
+    }
+};
+
+// --- UI Components ---
+function WeekTable({ selectedDate, onDaySelect, getScheduleForDate }: { selectedDate: Date, onDaySelect: (date: Date) => void, getScheduleForDate: (date: Date | null) => ScheduleEntry[] }) {
+    const weekDays = eachDayOfInterval({
+        start: startOfWeek(selectedDate, { weekStartsOn: 1 }),
+        end: endOfWeek(selectedDate, { weekStartsOn: 1 }),
+    });
+
+    const timeSlotHeaders = ['1', '2', '3', '4', '5', '6', '7'];
+    const timeSlots = ["08:00", "09:45", "11:30", "13:15", "15:00", "16:45", "18:30"];
+
+    return (
+        <div className="bg-card p-2 sm:p-4 rounded-lg border">
+            <h2 className="text-lg font-semibold mb-2 hidden sm:block">Sumar săptămânal</h2>
+            <Table className="table-fixed w-full">
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-[60px] p-1 sm:p-2">Data</TableHead>
+                        {timeSlotHeaders.map(header => <TableHead key={header} className="text-center p-1 text-xs sm:text-sm">{header}</TableHead>)}
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {weekDays.map(day => (
+                        <TableRow 
+                            key={day.toISOString()} 
+                            className={cn("cursor-pointer", isSameDay(day, selectedDate) && "bg-muted/50")}
+                            onClick={() => onDaySelect(day)}
+                        >
+                            <TableCell className="font-medium p-1 sm:p-2">
+                                <div className="capitalize text-xs sm:text-sm">{format(day, 'EEEE', { locale: ro }).substring(0, 2)}</div>
+                                <div className="text-[10px] sm:text-xs text-muted-foreground">{format(day, 'dd.MM')}</div>
+                            </TableCell>
+                            {timeSlotHeaders.map((_, index) => {
+                                const slot = timeSlots[index];
+                                const lessons = getScheduleForDate(day);
+                                const lesson = lessons.find(l => l.time === slot);
+                                return (
+                                    <TableCell key={slot} className={cn("text-center text-xs p-1 font-bold", lesson && "bg-primary/20 rounded-md")}>
+                                        {lesson ? getLessonAbbreviation(lesson.type) : '-'}
+                                    </TableCell>
+                                )
+                            })}
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+    )
+}
+
+function LegendAndActions() {
+  return (
+    <div className="bg-card p-2 rounded-lg border flex flex-col gap-2">
+      <div className="text-[10px] text-muted-foreground text-center space-y-0.5">
+        <p>P - Prelegere | S - Seminar | L - Laborator</p>
+        <p>PC - Proiect de Curs | EP - Evaluare periodică</p>
+        <p>C - Consultație | E - Examinare | R - Reexaminare</p>
+      </div>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <MoreHorizontal className="mr-2 h-4 w-4" />
+            Mai multe acțiuni
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Acțiuni suplimentare</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 justify-center pt-4">
+            <Button variant="outline" size="sm" disabled>
+              <Printer className="mr-2 h-4 w-4" />
+              Descărcare
+            </Button>
+            <Button variant="outline" size="sm" disabled>
+              <BookOpen className="mr-2 h-4 w-4" />
+              Examene
+            </Button>
+            <Button variant="outline" size="sm" disabled>
+              <CalendarClock className="mr-2 h-4 w-4" />
+              Planificare
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// --- Main App Component ---
+function App() {
+  // --- DATA MOVED INSIDE COMPONENT TO PREVENT CACHING ISSUES ---
+  const scheduleData: ScheduleData = {
+    '2025-10-20': [
+      { time: '08:00', subject: 'Базы данных', type: 'Лекция', professor: 'Проф. Иванов', classroom: '301' },
+      { time: '09:45', subject: 'Веб-программирование Веб-программирование', type: 'Практика', professor: 'Проф. Петров', classroom: '404-А' },
+      { time: '11:30', subject: 'Английский язык', type: 'Практика', professor: 'Проф. Сидорова', classroom: '202' },
+    ],
+    '2025-10-21': [
+      { time: '09:45', subject: 'Операционные системы', type: 'Лекция', professor: 'Проф. Смирнов', classroom: '501' },
+      { time: '11:30', subject: 'Компьютерные сети', type: 'Лаб.', professor: 'Проф. Кузнецов', classroom: '101-Л' },
+    ],
+    '2025-10-22': [ // День с 7 парами
+      { time: '08:00', subject: 'Математический анализ', type: 'Лекция', professor: 'Проф. Захаров', classroom: '101' },
+      { time: '09:45', subject: 'Дискретная математика', type: 'Практика', professor: 'Проф. Новикова', classroom: '102' },
+      { time: '11:30', subject: 'Алгоритмы и структуры данных', type: 'Лекция', professor: 'Проф. Морозов', classroom: '103' },
+      { time: '13:15', subject: 'Философия', type: 'Практика', professor: 'Доц. Лебедева', classroom: '104' },
+      { time: '15:00', subject: 'Проектирование программного обеспечения', type: 'Лекция', professor: 'Проф. Соловьев', classroom: '105' },
+      { time: '16:45', subject: 'Английский для IT', type: 'Практика', professor: 'Проф. Козлова', classroom: '106' },
+      { time: '18:30', subject: 'Безопасность компьютерных систем', type: 'Лаб.', professor: 'Проф. Орлов', classroom: '107-Л' },
+    ],
+    '2025-10-23': [
+      { time: '08:00', subject: 'Базы данных', type: 'Лаб.', professor: 'Проф. Иванов', classroom: '303-Л' },
+      { time: '09:45', subject: 'Физическая культура', type: 'Практика', professor: 'Доц. Васильев', classroom: 'Спортзал' },
+    ],
+    '2025-10-24': [
+      { time: '11:30', subject: 'Веб-программирование', type: 'Лекция', professor: 'Проф. Петров', classroom: '404-А' },
+      { time: '13:15', subject: 'Операционные системы', type: 'Практика', professor: 'Проф. Смирнов', classroom: '505' },
+    ],
+    '2025-10-25': [ // Суббота
+      { time: '10:00', subject: 'Консультация по курсовому проекту', type: 'Практика', professor: 'Проф. Петров', classroom: '404-А' },
+    ],
+    '2025-10-27': [ // Следующий понедельник
+      { time: '08:00', subject: 'Базы данных (повтор)', type: 'Лекция', professor: 'Проф. Иванов', classroom: '301' },
+      { time: '09:45', subject: 'Веб-программирование Веб-программирование', type: 'Практика', professor: 'Проф. Петров', classroom: '404-А' },
+      { time: '11:30', subject: 'Английский язык', type: 'Практика', professor: 'Проф. Сидорова', classroom: '202' },
+    ],
+    '2025-10-28': [
+      { time: '09:45', subject: 'Операционные системы', type: 'Лекция', professor: 'Проф. Смирнов', classroom: '501' },
+    ],
+  };
+
+  const getScheduleForDate = useCallback((date: Date | null): ScheduleEntry[] => {
+    if (!date) return [];
+    const dateString = date.toISOString().split('T')[0];
+    return scheduleData[dateString] || [];
+  }, [scheduleData]);
+
+
+  // --- State ---
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date('2025-10-20'));
+  const [searchType, setSearchType] = useState<SearchType>("grupe");
+  const [searchQuery, setSearchQuery] = useState("TI-211");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+  const [mobileView, setMobileView] = useState<'main' | 'day'>('main');
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // --- Effects ---
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener('resize', handleResize);
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setIsSearchOpen((open) => !open)
+      }
+    }
+    document.addEventListener("keydown", down)
+    
+    // Prevent animation on first load
+    const timer = setTimeout(() => setIsInitialLoad(false), 10);
+
+    return () => {
+        window.removeEventListener('resize', handleResize);
+        document.removeEventListener("keydown", down);
+        clearTimeout(timer);
+    }
+  }, []);
+
+  // --- Handlers ---
+  const handleDaySelect = (date: Date) => {
+    setSelectedDate(date);
+    if (!isDesktop) setMobileView('day');
+  };
+
+  const handleBack = () => {
+    if (!isDesktop) setMobileView('main');
+  };
+  
+  const handleDateSelectInCalendar = (date: Date | undefined) => {
+    if (date) {
+        setSelectedDate(date);
+    } else {
+        setSelectedDate(null); // Allow unselecting
+    }
+  }
+  
+  const bindMainViewDrag = useDrag(({ down, movement: [mx], direction: [dx], cancel }) => {
+    // Swipe LEFT to go to DayView
+    if (down && dx < 0 && mx < -100) {
+      if (selectedDate) setMobileView('day');
+      cancel();
+    }
+  }, { axis: 'x', filterTaps: true });
+
+
+  // --- Sub-Components ---
+  const ControlPanel = () => (
+    <div className="bg-card p-2 rounded-lg border flex flex-col gap-2">
+        <ToggleGroup type="single" value={searchType} onValueChange={(value: SearchType) => value && setSearchType(value)} className="w-full">
+            <ToggleGroupItem value="grupe" className="w-full h-8 text-xs">Grupe</ToggleGroupItem>
+            <ToggleGroupItem value="profesori" className="w-full h-8 text-xs">Profesori</ToggleGroupItem>
+            <ToggleGroupItem value="aule" className="w-full h-8 text-xs">Aule</ToggleGroupItem>
+        </ToggleGroup>
+        <Button variant="outline" size="sm" className="w-full justify-start text-left font-normal" onClick={() => setIsSearchOpen(true)}>
+            <Search className="mr-2 h-4 w-4" />
+            <span className="truncate">{searchQuery || "Căutare..."}</span>
+            <kbd className="ml-auto hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                <span className="text-xs">⌘</span>K
+            </kbd>
+        </Button>
+        <Popover>
+            <PopoverTrigger asChild>
+            <Button variant={"outline"} size="sm" className={cn("w-full justify-start text-left font-normal",!selectedDate && "text-muted-foreground")}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? `Săptămâna: ${format(startOfWeek(selectedDate, { weekStartsOn: 1 }), "dd.MM.yy")}` : <span>Selectați săptămâna</span>}
+            </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+            <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelectInCalendar}
+                initialFocus
+                locale={ro}
+            />
+            </PopoverContent>
+        </Popover>
+    </div>
+  );
+
+  // --- RENDER ---
+  return (
+    <main className="dark bg-background text-foreground h-screen w-screen overflow-hidden p-2 sm:p-4 flex flex-col">
+      <header className="flex-shrink-0 mb-2 px-2 sm:px-0 text-center sm:text-left mt-2 sm:mt-0">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Orarul Cursurilor</h1>
+      </header>
+
+      {isDesktop ? (
+        // --- DESKTOP LAYOUT ---
+        <div className="flex-grow flex gap-4 min-h-0">
+          <aside className="w-[420px] flex-shrink-0 flex flex-col gap-4">
+            <ControlPanel />
+            <div className="flex-grow min-h-0">
+              {selectedDate && <WeekTable selectedDate={selectedDate} onDaySelect={handleDaySelect} getScheduleForDate={getScheduleForDate} />}
+            </div>
+          </aside>
+          <section className="flex-grow min-w-0">
+            {selectedDate && (
+              <AnimatePresence mode="wait">
+                <motion.div key={selectedDate.toISOString()} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="h-full">
+                  <DayView date={selectedDate} onBack={() => {}} onDateChange={setSelectedDate} getScheduleForDate={getScheduleForDate} />
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </section>
+        </div>
+      ) : (
+        // --- MOBILE LAYOUT ---
+        <div className="flex-grow min-h-0 relative overflow-hidden">
+          <AnimatePresence>
+            {mobileView === 'main' && (
+              <motion.div 
+                {...bindMainViewDrag()} 
+                key="main" 
+                initial={{ x: isInitialLoad ? '0%' : '-100%' }} 
+                animate={{ x: '0%' }} 
+                exit={{ x: '-100%' }} 
+                transition={{ duration: 0.3, ease: 'easeInOut' }} 
+                className="absolute top-0 left-0 w-full h-full flex flex-col gap-2 touch-none"
+              >
+                <div className="flex-shrink-0">
+                    <ControlPanel />
+                </div>
+                <div className="flex-shrink-0">
+                   {selectedDate ? <WeekTable selectedDate={selectedDate} onDaySelect={handleDaySelect} getScheduleForDate={getScheduleForDate} /> : <div className="bg-card p-2 sm:p-4 rounded-lg border h-[350px] flex items-center justify-center"><p className="text-muted-foreground">Selectați o săptămână</p></div>}
+                </div>
+                <div className="mt-auto flex-shrink-0">
+                    <LegendAndActions />
+                </div>
+              </motion.div>
+            )}
+            {mobileView === 'day' && selectedDate && (
+              <motion.div 
+                key="day" 
+                initial={{ x: '100%' }} 
+                animate={{ x: '0%' }} 
+                exit={{ x: '100%' }} 
+                transition={{ duration: 0.3, ease: 'easeInOut' }} 
+                className="absolute top-0 left-0 w-full h-full p-2"
+              >
+                <div className="h-full w-full rounded-lg overflow-hidden">
+                    <DayView date={selectedDate} onBack={handleBack} onDateChange={setSelectedDate} getScheduleForDate={getScheduleForDate} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Search Command Dialog (shared) */}
+      <CommandDialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+          <CommandInput placeholder={`Căutare (${searchType})...`} />
+          <CommandList>
+            <CommandEmpty>Niciun rezultat.</CommandEmpty>
+            <CommandGroup heading="Rezultate">
+              {MOCK_SEARCH_DATA[searchType].map(item => (
+                <CommandItem key={item} onSelect={() => { setSearchQuery(item); setIsSearchOpen(false); }}>
+                  {item}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </CommandDialog>
+    </main>
+  );
+}
+
+export default App;
+
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/lib/utils.ts
+--------------------------------------------------------------------
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/src/main.tsx
+--------------------------------------------------------------------
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+
+--------------------------------------------------------------------
+--- Файл: ./frontend/postcss.config.js
+--------------------------------------------------------------------
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+
+====================================================================
+========== ЗАВЕРШЕНИЕ ВЫВОДА КОДА ПРОЕКТА './frontend' =========
+====================================================================
