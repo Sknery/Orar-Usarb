@@ -1,0 +1,77 @@
+# Задаем имя проекта, чтобы имена контейнеров были предсказуемыми (например, orar-usarb-schedule-api-1)
+name: orar-usarb
+
+services:
+  schedule-client:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    # ИЗМЕНЕНИЕ: Запускаем dev-сервер Vite. Команда возьмется из обновленного Dockerfile.
+    ports:
+      # ИЗМЕНЕНИЕ: Vite в режиме разработки по умолчанию работает на порту 5173
+      - "5173:5173"
+    restart: unless-stopped
+    # ИЗМЕНЕНИЕ: Подключаем локальные файлы для hot-reload
+    volumes:
+      # Синхронизируем исходный код. Изменения в локальных файлах сразу появятся в контейнере.
+      - ./frontend:/app
+      # Эта строка предотвращает затирание папки node_modules в контейнере локальной.
+      - /app/node_modules
+    depends_on:
+      - schedule-api
+    networks:
+      - schedule-net
+
+  schedule-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - API_PORT=${API_PORT}
+    # ИЗМЕНЕНИЕ: Меняем команду на запуск в режиме разработки с отслеживанием файлов.
+    command: pnpm run start:dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      schedule-db:
+        condition: service_healthy
+    # ИЗМЕНЕНИЕ: Подключаем локальные файлы для hot-reload
+    volumes:
+      # Синхронизируем исходный код.
+      - ./backend:/app
+      # Предотвращаем затирание node_modules.
+      - /app/node_modules
+    networks:
+      - schedule-net
+
+  schedule-db:
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_DB=${DB_DATABASE}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - schedule-net
+
+volumes:
+  postgres_data:
+
+networks:
+  schedule-net:
+    driver: bridge
