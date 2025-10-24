@@ -14,9 +14,11 @@ import {
   subMonths,
   addDays
 } from 'date-fns';
-import { ro } from 'date-fns/locale';
+import { ro } from 'date-fns/locale'; // Оставляем 'ro' для format()
 import { cn } from '@/lib/utils';
 import type { ScheduleEntry, SearchType } from '@/types';
+// --- ИЗМЕНЕНИЕ: Импортируем ГЛОБАЛЬНЫЕ ОПЦИИ ---
+import { RO_WEEK_OPTIONS } from '@/utils/date-config';
 
 interface MonthViewProps {
   selectedDate: Date;
@@ -43,8 +45,10 @@ export function MonthView({
 }: MonthViewProps) {
   
   const monthStart = startOfMonth(selectedDate);
-  const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
+  // --- ИЗМЕНЕНИЕ: Используем ГЛОБАЛЬНЫЕ ОПЦИИ ---
+  const startDate = startOfWeek(monthStart, RO_WEEK_OPTIONS);
   const endDate = addDays(startDate, 41);
+  // --- КОНЕЦ ИЗМЕНЕНИЯ ---
   
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
@@ -155,3 +159,4 @@ export function MonthView({
     </div>
   );
 }
+

@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { format, startOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import type { SearchType, SearchOption } from '@/types';
+// --- ИЗМЕНЕНИЕ: Импортируем ГЛОБАЛЬНЫЕ ОПЦИИ ---
+import { RO_WEEK_OPTIONS } from '@/utils/date-config';
 
 interface MobileControlPanelProps {
   selectedDate: Date | null;
@@ -85,13 +87,24 @@ export function MobileControlPanel({
               </Button>
               <Popover>
                 <PopoverTrigger asChild>
+                  {/* --- ИЗМЕНЕНИЕ: Используем ГЛОБАЛЬНЫЕ ОПЦИИ --- */}
                   <Button variant={"outline"} size="sm" className={cn("w-full justify-start text-left font-normal", !selectedDate && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? `Săptămâna: ${format(startOfWeek(selectedDate, { weekStartsOn: 1 }), "dd.MM.yy")}` : <span>Selectați săptămâna</span>}
+                    {selectedDate ? `Săptămâna: ${format(startOfWeek(selectedDate, RO_WEEK_OPTIONS), "dd.MM.yy")}` : <span>Selectați săptămâna</span>}
                   </Button>
+                  {/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */}
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={selectedDate || undefined} onSelect={handleDateSelectInCalendar} initialFocus locale={ro} />
+                  {/* --- ИЗМЕНЕНИЕ: Передаем 'ro' и 'weekStartsOn' в Календарь --- */}
+                  <Calendar 
+                    mode="single" 
+                    selected={selectedDate || undefined} 
+                    onSelect={handleDateSelectInCalendar} 
+                    initialFocus 
+                    locale={ro} 
+                    weekStartsOn={1} // Явно указываем
+                  />
+                  {/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */}
                 </PopoverContent>
               </Popover>
             </div>
@@ -102,9 +115,12 @@ export function MobileControlPanel({
         <span>{getSearchTypeLabel(searchType)}: {searchQuery}</span>
         <span className="mx-2">|</span>
         <span>
-          {selectedDate ? `Săptămâna: ${format(startOfWeek(selectedDate, { weekStartsOn: 1 }), "dd.MM")}` : 'Nicio săptămână'}
+          {/* --- ИЗМЕНЕНИЕ: Используем ГЛОБАЛЬНЫЕ ОПЦИИ --- */}
+          {selectedDate ? `Săptămâna: ${format(startOfWeek(selectedDate, RO_WEEK_OPTIONS), "dd.MM")}` : 'Nicio săptămână'}
+          {/* --- КОНЕЦ ИZМЕНЕНИЯ --- */}
         </span>
       </div>
     </div>
   );
 }
+
