@@ -1,15 +1,53 @@
 import { useState, useRef } from 'react';
 import { AnimatePresence, motion, PanInfo } from 'framer-motion';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Coffee, ArrowUp, ArrowDown, ChevronLeft, Hand } from "lucide-react";
+// ИЗМЕНЕНИЕ: Добавляем иконку 'Users'
+import { ArrowLeft, Coffee, ArrowUp, ArrowDown, ChevronLeft, Hand, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, addDays, subDays } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import type { ScheduleEntry } from '@/types';
+// ИЗМЕНЕНИЕ: Импортируем компоненты Dialog
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // --- Sub-Components ---
 
+// НОВЫЙ КОМПОНЕНТ: Модальное окно для списка групп
+const GroupListModal = ({ groups, trigger }: { groups: string[]; trigger: React.ReactNode }) => {
+  return (
+    <Dialog>
+      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+        {trigger}
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Lista grupelor</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto">
+          {groups.map((group, index) => (
+            <div key={index} className="p-2 bg-muted rounded-md text-sm font-medium">
+              {group}
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const LessonCard = ({ lesson, isExpanded, onClick }: { lesson: ScheduleEntry; isExpanded: boolean; onClick: () => void; }) => {
+  
+  // НОВАЯ ЛОГИКА: Разбиваем строку групп на массив
+  const groups = lesson.group.split(', ').map(g => g.trim()).filter(g => g);
+  // Максимум групп для отображения текстом, прежде чем появится кнопка модального окна
+  const MAX_GROUPS_VISIBLE = 1; 
+
   return (
     <motion.button
       layout
@@ -18,10 +56,13 @@ const LessonCard = ({ lesson, isExpanded, onClick }: { lesson: ScheduleEntry; is
       style={{ borderLeftColor: lesson.professorColor, borderLeftWidth: '4px' }}
       className="flex items-center px-2 py-0.5 sm:px-3 sm:py-2 rounded-lg bg-card border flex-grow xl:flex-grow-0 min-h-0 text-left w-full transition-all hover:bg-muted"
     >
+      {/* Левая часть (Время, Тип) - Без изменений */}
       <div className="flex flex-col items-center justify-center w-14 sm:w-20 mr-2 sm:mr-4 flex-shrink-0">
         <span className="font-bold text-sm sm:text-lg">{lesson.time}</span>
         <span className="text-xs text-muted-foreground">{lesson.type}</span>
       </div>
+      
+      {/* Центральная часть (Предмет, Профессор) - Без изменений */}
       <div className="flex-grow min-w-0">
         <h3 className={cn("font-semibold text-sm sm:text-base break-words", !isExpanded && "line-clamp-1")}>
           {lesson.subject}
@@ -30,8 +71,34 @@ const LessonCard = ({ lesson, isExpanded, onClick }: { lesson: ScheduleEntry; is
           {lesson.professor}
         </p>
       </div>
-      <div className="flex-shrink-0 w-16 text-center flex flex-col items-center justify-center">
-        <span className="text-xs font-medium text-muted-foreground">{lesson.group}</span>
+
+      {/* Правая часть (Группа, Аудитория) - ИЗМЕНЕНО */}
+      <div className="flex-shrink-0 w-16 text-center flex flex-col items-center justify-center gap-1">
+        
+        {/* ИЗМЕНЕННАЯ ЛОГИКА ОТОБРАЖЕНИЯ ГРУПП */}
+        {groups.length > MAX_GROUPS_VISIBLE ? (
+          // Если групп > 1, показываем кнопку модального окна
+          <GroupListModal
+            groups={groups}
+            trigger={
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-row h-auto text-xs text-muted-foreground hover:text-accent-foreground"
+              >
+                {/* <Users/> */}
+                {groups.length} Grupe
+              </Button>
+            }
+          />
+        ) : (
+          // Если группа 1, показываем их текстом 
+          <span className="text-xs font-medium text-muted-foreground truncate w-full px-1">
+            {lesson.group}
+          </span>
+        )}
+        {/* КОНЕЦ ИЗМЕНЕННОЙ ЛОГИКИ */}
+
         <span className="font-semibold text-sm sm:text-base">{lesson.classroom}</span>
       </div>
     </motion.button>
@@ -171,4 +238,3 @@ export function DayView({ date, onBack, onDateChange, schedule }: { date: Date; 
     </div>
   );
 }
-
