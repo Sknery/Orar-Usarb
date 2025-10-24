@@ -15,6 +15,7 @@ const LegendPopover = () => (
             <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
                 <HelpCircle className="h-4 w-4 text-muted-foreground" />
             </Button>
+            
         </PopoverTrigger>
         <PopoverContent className="w-auto text-sm p-3" side="top">
             <div className="font-bold mb-2">Legendă</div>

@@ -59,6 +59,29 @@ export function useSchedule({
   // --- Ref для отслеживания уже запрошенных недель ---
   const fetchedRequestsRef = useRef(new Set<string>());
 
+  // ---
+  // ---
+  // --- НОВЫЙ ЭФФЕКТ ДЛЯ ОЧИСТКИ КЭША ---
+  // ---
+  // ---
+  // Этот эффект следит за searchQuery и searchType.
+  // Как только они меняются (пользователь меняет вкладку или выбирает
+  // другой поиск), мы полностью очищаем старые данные.
+  useEffect(() => {
+    console.log(`%c${LOG_PREFIX_HOOK} Смена контекста: ${searchType} / ${searchQuery}. Очистка...`, LOG_STYLE_HOOK);
+    // Сбрасываем уроки
+    setAllLessons([]);
+    // Сбрасываем кэш запрошенных недель
+    fetchedRequestsRef.current.clear();
+    // Устанавливаем isLoading, так как мы будем загружать новые данные
+    setIsLoading(true);
+  }, [searchQuery, searchType]); // <-- Этот эффект зависит ТОЛЬКО от searchQuery и searchType
+  // ---
+  // ---
+  // --- КОНЕЦ НОВОГО ЭФФЕКТА ---
+  // ---
+  // ---
+
   // --- Эффект для загрузки данных ---
   useEffect(() => {
     
@@ -74,7 +97,13 @@ export function useSchedule({
           // --- ИЗМЕНЕНИЕ: Отправляем 'yyyy-MM-dd' строку ---
           startDateOfWeek: startDateOfWeekStr,
         });
-        params.append(searchType, searchQuery);
+        
+        // --- ИЗМЕНЕНИЕ: Проверяем, что searchType не 'grupe', 'profesori' или 'aule' ---
+        // Это исправление для типа, чтобы params.append работал
+        if (searchType === 'grupe' || searchType === 'profesori' || searchType === 'aule') {
+            params.append(searchType, searchQuery);
+        }
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
         console.log(`%c${LOG_PREFIX_REQ} Отправка запроса на /api/schedule со параметрами: ${params.toString()}`, LOG_STYLE_REQ);
 
@@ -99,16 +128,11 @@ export function useSchedule({
         }
 
         // --- ИЗМЕНЕНИЕ: Добавляем данные, а не заменяем ---
+        // Эта логика теперь безопасна, так как allLessons очищается
+        // при смене query/type благодаря новому useEffect.
+        // Мы просто добавляем уроки (для разных недель одного запроса).
         setAllLessons(prevLessons => {
-            // Создаем Set дат, которые есть в новом пакете данных
-            const newLessonDates = new Set(data.schedule.map(l => l.date));
-            
-            // Фильтруем старые уроки, УБИРАЯ те, которые относятся к датам из нового пакека
-            // Это гарантирует, что если расписание на неделю обновилось, мы покажем новые данные
-            const oldLessonsToKeep = prevLessons.filter(l => !newLessonDates.has(l.date));
-            
-            // Возвращаем старые уроки (с других недель) + новые уроки
-            return [...oldLessonsToKeep, ...data.schedule];
+            return [...prevLessons, ...data.schedule];
         });
         // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
@@ -129,8 +153,8 @@ export function useSchedule({
     // Если нет searchQuery, сбрасываем состояние и выходим
     if (!searchQuery) {
         console.log(`%c${LOG_PREFIX_FETCH} Нет searchQuery, сброс состояния.`, LOG_STYLE_FETCH);
-        setAllLessons([]);
-        fetchedRequestsRef.current.clear(); // Сбрасываем кэш запросов
+        // allLessons и fetchedRequestsRef УЖЕ БЫЛИ очищены
+        // новым useEffect. Нам нужно только выключить загрузку.
         setIsLoading(false);
         setError(null);
         return;
@@ -138,7 +162,7 @@ export function useSchedule({
 
     // --- ИЗМЕНЕНИЕ: Запускаем загрузку для каждой требуемой недели ---
     let activeFetches = 0;
-    setIsLoading(true); // Показываем загрузку, если начинаем fetch
+    // setIsLoading(true); // <-- Это уже делается в новом useEffect
 
     academicWeeks.forEach(weekToFetch => {
         const requestKey = `${searchType}-${searchQuery}-${weekToFetch}-${semester}`;
@@ -171,25 +195,51 @@ export function useSchedule({
     // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
   // --- ИЗМЕНЕНИЕ: Зависимости эффекта ---
+  // Этот эффект теперь зависит от ВСЕХ параметров.
+  // Новый useEffect выше сработает ПЕРВЫМ при смене query/type,
+  // очистит данные, а ЗАТЕМ сработает этот эффект и начнет
+  // новую загрузку.
   }, [searchQuery, searchType, academicWeeks, dateContext, semester]); 
   // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
 
   // --- Мемоизированная функция фильтрации ---
+  // ---
+  // --- 
+  // --- ОКОНЧАТЕЛЬНОЕ ИСПРАВЛЕНИЕ БАГА ---
+  // ---
+  // ---
   const getScheduleForDate = useCallback((date: Date | null, query: string, type: SearchType): ScheduleEntry[] => {
+    
+    // 1. Проверяем, что у нас есть дата и уроки
     if (!date || !allLessons || allLessons.length === 0) {
       return [];
     }
+    
+    // Параметры 'query' и 'type' БОЛЬШЕ НЕ НУЖНЫ для фильтрации.
+    // `allLessons` УЖЕ содержит данные ТОЛЬКО для текущего
+    // `searchQuery` и `searchType` (благодаря новому useEffect).
+    // Нам нужно фильтровать ТОЛЬКО ПО ДАТЕ.
+    
+    // 2. Получаем дату в нужном формате
     const targetDateStr = format(date, 'yyyy-MM-dd');
-    
-    // --- ИЗМЕНЕНИЕ: Фильтруем по `allLessons` ---
-    const filtered = allLessons.filter(lesson => lesson.date === targetDateStr);
-    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
-    
-    // console.log(`%c${LOG_PREFIX_FILTER} Фильтрация getScheduleForDate для даты ${targetDateStr}. Найдено ${filtered.length}`, LOG_STYLE_FILTER);
-    return filtered;
-  }, [allLessons]); // Зависит только от `allLessons`
 
+    // 3. Фильтруем!
+    const filtered = allLessons.filter(lesson => {
+      // Условие 1: Дата должна совпадать
+      const dateMatch = lesson.date === targetDateStr;
+      return dateMatch;
+    });
+    
+    // console.log(`%c${LOG_PREFIX_FILTER} Фильтрация для ${targetDateStr}. Найдено ${filtered.length} из ${allLessons.length}`, LOG_STYLE_FILTER);
+    
+    return filtered;
+  }, [allLessons]); // Зависимость `allLessons` правильная
+  // ---
+  // --- 
+  // --- КОНЕЦ ИСПРАВЛЕНИЯ БАГА ---
+  // ---
+  // ---
 
   // --- Мемоизированные опции для поиска ---
   const searchOptions = useMemo(() => {
