@@ -1,4 +1,6 @@
 import { startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+// --- ИЗМЕНЕНИЕ: Импортируем ГЛОБАЛЬНЫЕ ОПЦИИ ---
+import { RO_WEEK_OPTIONS } from './date-config';
 
 /**
  * Возвращает массив дат для недели, содержащей указанную дату.
@@ -6,8 +8,10 @@ import { startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
  * @returns Массив объектов Date от понедельника до воскресенья.
  */
 export function getWeekDays(date: Date): Date[] {
-  const weekStart = startOfWeek(date, { weekStartsOn: 1 }); 
-  const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+  // --- ИЗМЕНЕНИЕ: Используем ГЛОБАЛЬНЫЕ ОПЦИИ ---
+  const weekStart = startOfWeek(date, RO_WEEK_OPTIONS); 
+  const weekEnd = endOfWeek(date, RO_WEEK_OPTIONS);
+  // --- КОНЕЦ ИЗМЕНЕНИЯ ---
   return eachDayOfInterval({ start: weekStart, end: weekEnd });
 }
 

@@ -12,8 +12,24 @@ import { cn } from "@/lib/utils";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import type { ScheduleEntry } from '@/types';
+// --- ИЗМЕНЕНИЕ: Импортируем ГЛОБАЛЬНЫЕ ОПЦИИ ---
+import { RO_WEEK_OPTIONS } from '@/utils/date-config';
 
-const getLessonAbbreviation = (type: ScheduleEntry['type']): string => ({ 'Lecție': 'P', 'Practică': 'S', 'Laborator': 'L' }[type] || '?');
+// ИСПРАВЛЕНО: Обновляем карту аббревиатур в соответствии с легендой
+const getLessonAbbreviation = (type: ScheduleEntry['type']): string => ({
+    'Prelegere': 'P',
+    'Seminar': 'S',
+    'Practică': 'S', // Мы предполагаем, что "Practică" - это тоже тип "S" (Seminar)
+    'Laborator': 'L',
+    'Proiect de Curs': 'PC',
+    'Evaluare periodică': 'EP',
+    'Consultație': 'C',
+    'Examinare': 'E',
+    'Reexaminare': 'R',
+    'Seminar prealabil': 'SP',
+    'Seminar de totalizare': 'ST'
+}[type] || '?'); // Возвращаем '?', если тип не найден
+// --- КОНЕЦ ИСПРАВЛЕНИЯ ---
 
 const LegendPopover = () => (
     <Popover>
@@ -41,7 +57,12 @@ const LegendPopover = () => (
 );
 
 export function WeekTable({ selectedDate, onDaySelect, getScheduleForDate }: { selectedDate: Date, onDaySelect: (date: Date) => void, getScheduleForDate: (date: Date | null) => ScheduleEntry[] }) {
-    const weekDays = eachDayOfInterval({ start: startOfWeek(selectedDate, { weekStartsOn: 1 }), end: endOfWeek(selectedDate, { weekStartsOn: 1 }) });
+    // --- ИЗМЕНЕНИЕ: Используем ГЛОБАЛЬНЫЕ ОПЦИИ ---
+    const weekStart = startOfWeek(selectedDate, RO_WEEK_OPTIONS);
+    const weekEnd = endOfWeek(weekStart, RO_WEEK_OPTIONS); // Используем weekStart, чтобы быть точным
+    const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
     const timeSlots = ["08:00", "09:45", "11:30", "13:15", "15:00", "16:45", "18:30"];
     const timeSlotHeaders = ['1', '2', '3', '4', '5', '6', '7'];
 
@@ -82,15 +103,15 @@ export function WeekTable({ selectedDate, onDaySelect, getScheduleForDate }: { s
                                             key={slot}
                                             className={cn(
                                                 "text-center text-sm font-bold",
-                                                lesson && "rounded-md p-0", 
-                                                !lesson && "p-1 cursor-pointer transition-colors hover:bg-muted/25" 
+                                                lesson && "rounded-md p-0 relative",
+                                                !lesson && "p-1 cursor-pointer transition-colors hover:bg-muted/25"
                                             )}
                                             style={{ backgroundColor: lesson ? `${lesson.professorColor}40` : 'transparent' }}
                                             onClick={!lesson ? () => onDaySelect(day) : undefined}
                                         >
                                             {lesson ? (
                                                 <Popover>
-                                                    <PopoverTrigger className="w-full h-full flex items-center justify-center p-1 font-bold cursor-help focus:outline-none focus:ring-1 focus:ring-ring rounded-md">
+                                                    <PopoverTrigger className="absolute inset-0 flex items-center justify-center font-bold cursor-help focus:outline-none focus:ring-1 focus:ring-ring rounded-md">
                                                         {getLessonAbbreviation(lesson.type)}
                                                     </PopoverTrigger>
                                                     <PopoverContent className="w-auto max-w-[200px] text-sm p-3">
@@ -117,3 +138,4 @@ export function WeekTable({ selectedDate, onDaySelect, getScheduleForDate }: { s
         </div>
     );
 }
+
