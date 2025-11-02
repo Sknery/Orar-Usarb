@@ -106,7 +106,7 @@ export function WeekTable({ selectedDate, onDaySelect, getScheduleForDate }: { s
                                                 lesson && "rounded-md p-0 relative",
                                                 !lesson && "p-1 cursor-pointer transition-colors hover:bg-muted/25"
                                             )}
-                                            style={{ backgroundColor: lesson ? `${lesson.professorColor}40` : 'transparent' }}
+                                            style={{ backgroundColor: lesson ? `${lesson.professorColor}88` : 'transparent' }}
                                             onClick={!lesson ? () => onDaySelect(day) : undefined}
                                         >
                                             {lesson ? (
