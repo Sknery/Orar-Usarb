@@ -1,2 +1,26 @@
-project_code.txt
+# Зависимости
+node_modules/
+
+# Кеш pnpm
+pnpm-store/
+
+# Сборки (я вижу, вы используете 'dist' в Dockerfile)
+dist/
+build/
+
+# Файлы окружения (с секретами и паролями)
 .env
+.env.*
+!.env.example
+
+# Логи
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Системный мусор
+.DS_Store
+Thumbs.db
+
+project_code.txt
