@@ -1,0 +1,33 @@
+# --- ЭТАП 1: Сборка (Build) ---
+# Этот этап собирает TypeScript в JavaScript
+FROM node:22-slim AS builder
+RUN npm install -g pnpm
+WORKDIR /app
+
+# Копируем только package.json и pnpm-lock.yaml
+COPY package.json pnpm-lock.yaml ./
+# Устанавливаем ВСЕ зависимости (включая dev) для сборки
+RUN pnpm install --frozen-lockfile
+
+# Копируем остальной код
+COPY . .
+# Собираем production-билд
+RUN pnpm run build
+
+# --- ЭТАП 2: Production ---
+# Этот этап запускает собранный код
+FROM node:22-slim
+WORKDIR /app
+RUN npm install -g pnpm
+
+# Копируем package.json и pnpm-lock.yaml
+COPY package.json pnpm-lock.yaml ./
+# Устанавливаем ТОЛЬКО production-зависимости
+RUN pnpm install --prod --frozen-lockfile
+
+# Копируем собранный код (dist) из этапа 1
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 3000
+# Запускаем приложение
+CMD ["node", "dist/src/main.js"]
