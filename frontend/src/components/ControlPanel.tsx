@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Search, SlidersHorizontal } from "lucide-react";
+// --- ИЗМЕНЕНИЕ: Добавляем иконки ---
+import { Calendar as CalendarIcon, Search, SlidersHorizontal, Users, Briefcase, Building } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
     Dialog,
@@ -22,6 +23,8 @@ import { cn } from "@/lib/utils";
 import { format, startOfWeek } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import type { SearchType, SearchOption } from '@/types';
+// --- ИЗМЕНЕНИЕ: Импортируем 'getAcademicWeek' ---
+import { getAcademicWeek } from '@/utils/academicWeekUtils';
 // --- ИЗМЕНЕНИЕ: Импортируем ГЛОБАЛЬНЫЕ ОПЦИИ ---
 import { RO_WEEK_OPTIONS } from '@/utils/date-config';
 
@@ -34,15 +37,20 @@ interface ControlPanelProps {
     setSearchType: (type: SearchType) => void;
     searchOptions: Record<SearchType, SearchOption[]>;
     setIsSearchOpen: (isOpen: boolean) => void;
+    /** Определяет, как рендерится панель: как отдельная карточка или как часть другого контейнера */
+    variant?: 'card' | 'sidebar' | 'icon' | 'minimal';
 }
 
 export function ControlPanel({
     selectedDate,
     setSelectedDate,
     searchQuery,
+    setSearchQuery,
     searchType,
     setSearchType,
+    searchOptions,
     setIsSearchOpen,
+    variant = 'card' // Устанавливаем 'card' по умолчанию
 }: ControlPanelProps) {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const handleSearchTypeChange = (newType: string) => {
@@ -62,20 +70,38 @@ export function ControlPanel({
             "Selecție";
     };
 
+    // --- ИЗМЕНЕНИЕ: Классы зависят от варианта ---
+    const rootClassName = cn(
+        "flex gap-2",
+        variant === 'card' && "flex-col bg-card p-2 rounded-lg border",
+        (variant === 'sidebar' || variant === 'icon') && "flex-col",
+        variant === 'minimal' && "flex-row items-center" // <-- НОВЫЙ
+    );
+
     return (
-        <div className="bg-card p-2 rounded-lg border flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-                <ToggleGroup type="single" value={searchType} onValueChange={handleSearchTypeChange} className="w-full">
-                    <ToggleGroupItem value="grupe" className="w-full h-8 text-xs">Grupe</ToggleGroupItem>
-                    <ToggleGroupItem value="profesori" className="w-full h-8 text-xs">Profesori</ToggleGroupItem>
-                    <ToggleGroupItem value="aule" className="w-full h-8 text-xs">Aule</ToggleGroupItem>
+        <div className={rootClassName}>
+            {/* --- ИЗМЕНЕНИЕ: Контейнер меняет направление --- */}
+            <div className={cn("flex items-center gap-2", (variant === 'icon' || variant === 'sidebar') && "flex-col w-full", variant === 'minimal' && "flex-row")}>
+                <ToggleGroup type="single" value={searchType} onValueChange={handleSearchTypeChange} className={cn("w-full", (variant === 'sidebar' || variant === 'icon') && "flex-col gap-1", variant === 'minimal' && "flex-row w-auto")}>
+                    {/* --- ИЗМЕНЕНИЕ: Добавляем иконки и скрытый текст --- */}
+                    <ToggleGroupItem value="grupe" className={cn("h-8 text-xs", (variant === 'sidebar' || variant === 'icon') ? "w-full justify-start" : "w-auto")}>
+                        <Users className="h-4 w-4" />
+                        <span className={cn((variant === 'icon' || variant === 'minimal') ? "hidden" : "ml-2", variant === 'icon' && "group-hover:inline")}>Grupe</span>
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="profesori" className={cn("h-8 text-xs", (variant === 'sidebar' || variant === 'icon') ? "w-full justify-start" : "w-auto")}>
+                        <Briefcase className="h-4 w-4" />
+                        <span className={cn((variant === 'icon' || variant === 'minimal') ? "hidden" : "ml-2", variant === 'icon' && "group-hover:inline")}>Profesori</span>
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="aule" className={cn("h-8 text-xs", (variant === 'sidebar' || variant === 'icon') ? "w-full justify-start" : "w-auto")}>
+                        <Building className="h-4 w-4" />
+                        <span className={cn((variant === 'icon' || variant === 'minimal') ? "hidden" : "ml-2", variant === 'icon' && "group-hover:inline")}>Aule</span>
+                    </ToggleGroupItem>
                 </ToggleGroup>
                 <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
 
                     <DialogTrigger asChild>
-                        <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0">
-                            <SlidersHorizontal className="h-4 w-4" />
-                        </Button>
+                         {/* --- ИЗМЕНЕНИЕ: Кнопка фильтров тоже меняется --- */}
+
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader><DialogTitle>Filtre și Setări</DialogTitle></DialogHeader>
@@ -95,7 +121,7 @@ export function ControlPanel({
                                         <CalendarIcon className="mr-2 h-4 w-4" />
 
                                         {selectedDate ?
-                                            `Săptămâna: ${format(startOfWeek(selectedDate, RO_WEEK_OPTIONS), "dd.MM.yy")}` : <span>Selectați săptămâna</span>} 
+                                            `Săpt. ${getAcademicWeek(selectedDate)} (${format(startOfWeek(selectedDate, RO_WEEK_OPTIONS), "dd.MM.yy")})` : <span>Selectați săptămâna</span>} 
                                     </Button>
                                     {/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */}
                                 </PopoverTrigger>
@@ -115,18 +141,43 @@ export function ControlPanel({
                         </div>
                     </DialogContent>
                 </Dialog>
+                 {/* --- НОВЫЙ КОД: Кнопка поиска и календаря (только для minimal) --- */}
+                {variant === 'minimal' && (
+                    <>
+                        <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setIsSearchOpen(true)}>
+                            <Search className="h-4 w-4" />
+                        </Button>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant={"outline"} size="icon" className="h-8 w-8 flex-shrink-0">
+                                    <CalendarIcon className="h-4 w-4" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar 
+                                    mode="single" 
+                                    selected={selectedDate || undefined} 
+                                    onSelect={handleDateSelectInCalendar} 
+                                    initialFocus 
+                                    locale={ro} 
+                                    weekStartsOn={1}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </>
+                )}
             </div>
-            <div className="text-xs text-center text-muted-foreground border-t pt-2 mt-2">
+            {/* --- ИЗМЕНЕНИЕ: Скрываем текст в режиме иконок и minimal --- */}
+            <div className={cn("text-xs text-center text-muted-foreground border-t pt-2 mt-2", (variant === 'icon' || variant === 'minimal') && "hidden")}>
                 <span>{getSearchTypeLabel(searchType)}: {searchQuery}</span>
                 <span className="mx-2">|</span>
                 <span>
                     {/* --- ИЗМЕНЕНИЕ: Используем ГЛОБАЛЬНЫЕ ОПЦИИ --- */}
                     {selectedDate ?
-                        `Săptămâna: ${format(startOfWeek(selectedDate, RO_WEEK_OPTIONS), "dd.MM")}` : 'Nicio săptămână'} 
+                        `Săpt. ${getAcademicWeek(selectedDate)} (${format(startOfWeek(selectedDate, RO_WEEK_OPTIONS), "dd.MM")})` : 'Nicio săptămână'} 
                     {/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */}
                 </span>
             </div>
         </div>
     );
 }
-

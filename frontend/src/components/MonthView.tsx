@@ -1,8 +1,22 @@
-// --- ИЗМЕНЕНИЕ: Добавляем useState и useRef ---
+// --- ИЗМЕНЕНИЕ: Убраны импорты, связанные с Popover/Dialog ---
 import { useState, useRef } from 'react';
+// import type { MouseEvent } from 'react'; // <-- Убрано
 import { AnimatePresence, motion, PanInfo } from 'framer-motion';
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react"; // <-- Убраны StickyNote, PlusCircle
+// import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"; // <-- Убрано
+/* // <-- Убрано
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+*/
+// import { useNotes } from "@/contexts/NotesContext"; // <-- Убрано
+// import { LessonNoteEditor } from "./LessonNoteEditor"; // <-- Убрано
+// --- КОНЕЦ ИЗМЕНЕНИЙ ---
 import {
   startOfMonth,
   endOfMonth,
@@ -35,7 +49,6 @@ interface MonthViewProps {
 const timeSlots = ["08:00", "09:45", "11:30", "13:15", "15:00", "16:45", "18:30"];
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
 // --- НОВЫЙ КОД: Варианты для вертикальной анимации смены месяца ---
 const monthSlideVariants = {
   enter: (direction: number) => ({ y: direction > 0 ? "100%" : "-100%" }),
@@ -43,6 +56,15 @@ const monthSlideVariants = {
   exit: (direction: number) => ({ zIndex: 0, y: direction < 0 ? "100%" : "-100%" })
 };
 // --- КОНЕЦ НОВОГО КОДА ---
+
+// ---
+// --- УДАЛЕНО: Компонент NoteEditorTrigger ---
+// ---
+
+// ---
+// --- УДАЛЕНО: Компонент MonthLessonCell ---
+// ---
+
 
 export function MonthView({
   selectedDate,
@@ -66,7 +88,7 @@ export function MonthView({
   // --- КОНЕЦ ИЗМЕНЕНИЯ ---
   
   const days = eachDayOfInterval({ start: startDate, end: endDate });
-
+  
   // --- ИЗМЕНЕНИЕ: Обновляем changeMonth ---
   const changeMonth = (direction: number) => {
     // direction: 1 = следующий (свайп вверх), -1 = предыдущий (свайп вниз)
@@ -81,7 +103,8 @@ export function MonthView({
   // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
   const handleHeaderDragEnd = (e: MouseEvent | TouchEvent | PointerEvent, { offset, velocity }: PanInfo) => {
-    if (isAnimating) return; // --- Добавлена проверка ---
+    if (isAnimating) return;
+    // --- Добавлена проверка ---
     if (Math.abs(offset.x) > Math.abs(offset.y)) { 
       if (offset.x < -50 && Math.abs(velocity.x) > 0.3) {
         onBack();
@@ -90,7 +113,8 @@ export function MonthView({
   };
 
   const handleMainDragEnd = (e: MouseEvent | TouchEvent | PointerEvent, { offset, velocity }: PanInfo) => {
-    if (isAnimating) return; // --- Добавлена проверка ---
+    if (isAnimating) return;
+    // --- Добавлена проверка ---
 
     const isHorizontal = Math.abs(offset.x) > Math.abs(offset.y);
     if (isHorizontal) {
@@ -108,35 +132,43 @@ export function MonthView({
       }
     }
   };
-  
+
   return (
     <div className="flex flex-col h-full bg-background touch-none">
       
+      {/* === НОВЫЙ ХЕДЕР (Только для мобильных, lg:hidden) === */}
+      {/* Этот код почти идентичен хедеру из DayView.tsx для единообразия */}
       <motion.div
-        drag={false}
-        onPanEnd={handleHeaderDragEnd}
-        className="flex-shrink-0 flex flex-row-reverse items-center p-2 sm:p-4 mb-2"
+          drag={false}
+          onPanEnd={handleHeaderDragEnd}
+          /* === ИСПОЛЬЗУЕМ 'vh' ДЛЯ РАЗМЕРОВ === */
+          /* === ИСПОЛЬЗУЕМ lg:hidden ЧТОБЫ СКРЫТЬ НА ДЕСКТОПЕ === */
+          className="flex-shrink-0 flex flex-row-reverse items-center p-[1vh] sm:p-[1.5vh] lg:hidden"
       >
-        <Button variant="ghost" size="icon" onClick={onBack} className="xl:hidden ml-2">
-          <ArrowRight className="h-5 w-5" />
-        </Button>
-        
-        <div className="flex flex-col items-end">
-          <h1 className="text-xl sm:text-2xl font-bold capitalize -mb-1">
-            {capitalize(format(selectedDate, 'LLLL yyyy', { locale: ro }))}
-          </h1>
-          <p className="text-xs text-muted-foreground">Vizualizare lunară</p>
-        </div>
+          <Button variant="ghost" size="icon" onClick={onBack} className="ml-2">
+              <ArrowLeft className="h-[3vh] w-[3vh]" />
+          </Button>
+          <div className="flex flex-col items-end">
+              <h1 className="text-[2.8vh] sm:text-[3.2vh] font-bold capitalize -mb-1">
+                  {format(selectedDate, 'LLLL yyyy', { locale: ro })}
+              </h1>
+          </div>
       </motion.div>
+      {/* === КОНЕЦ НОВОГО ХЕДЕРА === */}
 
       <motion.div 
         drag={false}
         onPanEnd={handleMainDragEnd}
-        className="bg-card p-2 sm:p-4 rounded-lg border flex-grow flex flex-col min-h-0"
+        /* === ИЗМЕНЕНИЕ (vh): p-2 sm:p-4 -> vh === */
+        /* === ИЗМЕНЕНИЕ: Убираем отступы сверху на мобильных (т.к. хедер теперь внутри) === */
+        className="bg-card p-[1vh] sm:p-[1.5vh] lg:p-[1.5vh] rounded-lg border flex-grow flex flex-col min-h-0"
       >
-        <div className="grid grid-cols-7 gap-1 flex-shrink-0 mb-1">
+        {/* === ИЗМЕНЕНИЕ (vh): gap-1 mb-1 -> vh === */}
+        <div className="grid grid-cols-7 gap-[0.5vh] flex-shrink-0 mb-[0.5vh]">
           {["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"].map(day => (
-            <div key={day} className="text-center text-xs font-medium">{day}</div>
+        
+             /* === ИЗМЕНЕНИЕ (vh): text-xs -> vh === */
+             <div key={day} className="text-center text-[1.5vh] font-medium">{day}</div>
           ))}
         </div>
 
@@ -145,14 +177,16 @@ export function MonthView({
             позиционированием анимированного контента (position: absolute) */}
         <div className="relative flex-grow min-h-0 overflow-hidden">
           <AnimatePresence
-            initial={false}
+    
+                 initial={false}
             custom={monthAnimationDirection.current}
             onExitComplete={() => setIsAnimating(false)} // Сбрасываем флаг
           >
             <motion.div
               // Ключ должен меняться каждый месяц
               key={monthStart.toISOString()}
-              custom={monthAnimationDirection.current}
+        
+               custom={monthAnimationDirection.current}
               variants={monthSlideVariants} // Вертикальная анимация!
               initial="enter"
               animate="center"
@@ -160,48 +194,67 @@ export function MonthView({
               transition={{ y: { type: "spring", stiffness: 350, damping: 35 } }}
               // Абсолютное позиционирование для корректной анимации "вытеснения"
               className="absolute top-0 left-0 w-full h-full"
-            >
+          
+             >
               {/* Этот grid теперь анимируется */}
-              <div className="grid grid-cols-7 grid-rows-6 gap-1 flex-grow min-h-0 h-full">
+              {/* === ИЗМЕНЕНИЕ (vh): gap-1 -> vh === */}
+              <div className="grid grid-cols-7 grid-rows-6 gap-[0.5vh] flex-grow min-h-0 h-full">
                 {days.map(day => {
                   const lessons = getScheduleForDate(day, searchQuery, searchType);
-                  const isCurrentMonth = isSameMonth(day, selectedDate);
+                 
+                   const isCurrentMonth = isSameMonth(day, selectedDate);
                   const isToday = isSameDay(day, new Date());
                   return (
                     <button
                       key={day.toISOString()}
-                      onClick={() => onDaySelect(day)}
+           
+                         onClick={() => onDaySelect(day)}
+                      /* === ИЗМЕНЕНИЕ (vh): p-0.5 sm:p-1 -> vh === */
                       className={cn(
-                        "rounded-md border flex flex-col p-0.5 sm:p-1 overflow-hidden transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary",
-                        isCurrentMonth ? "bg-background/50" : "bg-muted/25 opacity-50",
+                        "rounded-md border flex flex-col p-[0.25vh] overflow-hidden transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary",
+                        isCurrentMonth ?
+ "bg-background/50" : "bg-muted/25 opacity-50",
                         isToday && "ring-2 ring-primary"
                       )}
                     >
+                      {/* === ИЗМЕНЕНИЕ (vh): text-xs mb-0.5 -> vh === */}
                       <span className={cn(
-                        "text-xs font-semibold mb-0.5",
+     
+                         "text-[1.5vh] font-semibold mb-[0.25vh]",
                         !isCurrentMonth && "text-muted-foreground/50"
                       )}>
                         {format(day, 'd')}
-                      </span>
+      
+                       </span>
                       
-              
-                      <div className="flex-grow grid grid-rows-7 gap-px">
+                      {/* === ГЛАВНОЕ ИЗМЕНЕНИЕ ===
+                        По умолчанию (мобильные) - 7 горизонтальных рядов (grid-rows-7).
+                        На 'lg' (десктоп) - сбрасываем ряды и ставим 7 вертикальных колонок (lg:grid-cols-7).
+                      */}
+                      <div className="flex-grow grid grid-rows-7 lg:grid-rows-none lg:grid-cols-7 gap-px">
+                        
+                        {/* --- ИЗМЕНЕНИЕ: Возвращаем старую логику рендера --- */}
                         {timeSlots.map((slot) => {
                           const lesson = lessons.find(l => l.time.startsWith(slot));
                           return (
                             <div
                               key={slot}
-                              className="w-full h-full rounded-sm min-h-[4px]"
+                              /* === ИЗМЕНЕНИЕ (vh): min-h-[4px] -> vh === */
+                              className="w-full h-full 
+ rounded-sm min-h-[0.5vh]" // min-h-[0.5vh] был min-h-[4px]
                               style={{ 
                                 backgroundColor: lesson ? `${lesson.professorColor}CC` : 'transparent' 
-                              }}
+                          
+                           }}
                             />
                           );
                         })}
-                      </div>
+                        {/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */}
+                  
+                       </div>
                     </button>
                   );
-                })}
+                 })}
               </div>
             </motion.div>
           </AnimatePresence>

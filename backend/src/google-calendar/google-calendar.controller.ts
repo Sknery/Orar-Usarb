@@ -1,7 +1,9 @@
-import { Controller, Get, Query, Res, Logger } from '@nestjs/common';
+import { Controller, Get, Query, Res, Logger, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { GoogleCalendarService } from './google-calendar.service';
-// --- ИЗМЕНЕНИЕ: Импортируем 'Response' как тип ---
 import type { Response } from 'express';
+// --- НОВЫЙ ИМПОРТ ---
+import { ScheduleEntry } from '../schedule/schedule.dto';
+// --- КОНЕЦ ИМПОРТА ---
 
 @Controller('google-calendar')
 export class GoogleCalendarController {
@@ -14,11 +16,10 @@ export class GoogleCalendarController {
     this.logger.log('Получен запрос на /api/google-calendar/auth-url');
     try {
       const authUrl = this.googleCalendarService.getAuthUrl();
-      // Отправляем редирект на страницу Google
       res.redirect(authUrl);
     } catch (error) {
       this.logger.error('Ошибка при генерации authUrl', error);
-      res.status(500).send('Ошибка при генерации URL аутентификации');
+      res.status(500).send('Eroare la generarea URL-ului de autentificare');
     }
   }
 
@@ -30,23 +31,17 @@ export class GoogleCalendarController {
     this.logger.log(`GET /oauth-callback - получен код: ${code ? '...' : 'НЕТ КОДА'}`);
     if (!code) {
       this.logger.warn('GET /oauth-callback - Код не предоставлен в запросе');
-      // --- ИСПРАВЛЕНИЕ: Используем localhost ---
       return res.redirect('http://localhost:5173?google-auth-error=true');
     }
 
     try {
-      // Обмениваем код на токены и сохраняем refresh_token
       await this.googleCalendarService.handleOAuthCallback(code);
       this.logger.log('GET /oauth-callback - Токены успешно получены и сохранены.');
       
-      // --- ИСПРАВЛЕНИЕ: Используем localhost ---
-      // ВАЖНО: Мы больше не показываем "Autentificare cu succes!",
-      // а просто перенаправляем пользователя обратно в приложение.
       res.redirect('http://localhost:5173');
 
     } catch (error) {
       this.logger.error(`GET /oauth-callback - Ошибка: ${error.message}`, error.stack);
-      // --- ИСПРАВЛЕНИЕ: Используем localhost ---
       res.redirect('http://localhost:5173?google-auth-error=true');
     }
   }
@@ -61,5 +56,28 @@ export class GoogleCalendarController {
     this.logger.log(`GET /check-status - Статус: ${isConnected}`);
     return { isConnected };
   }
-}
 
+  // ---
+  // --- НОВЫЙ ENDPOINT: Синхронизация недели
+  // ---
+  @Post('sync-week')
+  @HttpCode(HttpStatus.OK) // Отправляем 200 OK при успехе
+  async syncWeek(
+    @Body() body: { lessons: ScheduleEntry[], weekStartDate: string }
+  ) {
+    this.logger.log(`POST /sync-week - Получен запрос на синхронизацию ${body.lessons?.length ?? 0} уроков.`);
+    if (!body.lessons || !body.weekStartDate) {
+      this.logger.warn('POST /sync-week - Неверный запрос, отсутствуют уроки или дата.');
+      return { success: false, message: 'Date invalide.' };
+    }
+
+    try {
+      const result = await this.googleCalendarService.syncWeek(body.lessons, body.weekStartDate);
+      return result;
+    } catch (error) {
+      this.logger.error(`POST /sync-week - Ошибка при синхронизации: ${error.message}`);
+      // Отправляем ошибку обратно на фронтенд
+      return { success: false, message: error.message };
+    }
+  }
+}

@@ -14,4 +14,3 @@ import { UserToken } from './user-token.entity';
   providers: [GoogleCalendarService],
 })
 export class GoogleCalendarModule {}
-

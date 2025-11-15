@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   CommandDialog,
@@ -8,16 +9,15 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Button } from '@/components/ui/button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useSchedule } from '@/hooks/useSchedule';
 import { DesktopView } from './views/DesktopView';
 import { MobileView } from './views/MobileView';
 import type { SearchType, SearchOption } from './types';
-// --- ИЗМЕНЕНИЕ: Импортируем утилиту для получения видимых недель ---
-import { getVisibleWeeks } from './utils/academicWeekUtils'; 
-// --- КОНЕЦ ИЗМЕНЕНИЯ ---
+import { getVisibleWeeks } from './utils/academicWeekUtils';
+import { NotesProvider } from './contexts/NotesContext';
 
-// --- Константы для логгирования (без изменений) ---
 const LOG_PREFIX_APP = "🚀 [App.tsx]";
 const LOG_STYLE_APP = "color: #4CAF50; font-weight: bold;";
 const LOG_PREFIX_STATE = "🔄 [App.tsx]";
@@ -36,7 +36,7 @@ const defaultQueries: Record<SearchType, string> = {
 function App() {
   console.log(`%c${LOG_PREFIX_APP} Рендер компонента`, LOG_STYLE_APP);
 
-  // --- Состояния (без изменений) ---
+  // --- Состояния ---
   const [searchType, setSearchType] = useLocalStorage<SearchType>("schedule:searchType", "grupe");
 
   const [searchQueries, setSearchQueries] = useLocalStorage<Record<SearchType, string>>(
@@ -52,21 +52,36 @@ function App() {
   );
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1280);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+
+  // --- Состояние для темы ---
+  const [theme, setTheme] = useLocalStorage<'light' | 'dark'>('schedule:theme', 'dark');
+
+  // --- Функция переключения темы ---
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
+  };
+  
+  // --- Эффект для применения темы к <html> ---
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
+  // --- КОНЕЦ НОВОГО КОДА ---
+
 
   // --- Производные состояния ---
   const selectedDate = useMemo(() => {
     return storedDate ? new Date(storedDate) : initialDate;
   }, [storedDate, initialDate]);
 
-  // --- ИЗМЕНЕНИЕ: Считаем все видимые недели ---
   const visibleWeeks = useMemo(() => {
       console.log(`%c${LOG_PREFIX_DATA} Пересчет видимых недель для даты: ${selectedDate}`, LOG_STYLE_DATA);
       return getVisibleWeeks(selectedDate);
   }, [selectedDate]);
-  // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
   const currentSemester = useMemo(() => (selectedDate.getMonth() < 1 || selectedDate.getMonth() > 6 ? 1 : 2), [selectedDate]);
   
@@ -76,10 +91,8 @@ function App() {
   const scheduleParams = useMemo(() => ({
     searchQuery,
     searchType,
-    // --- ИЗМЕНЕНИЕ: Передаем массив недель и контекст даты ---
     academicWeeks: visibleWeeks,
     dateContext: selectedDate, // Для определения учебного года
-    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
     semester: currentSemester,
   }), [searchQuery, searchType, visibleWeeks, selectedDate, currentSemester]);
 
@@ -114,12 +127,10 @@ function App() {
     setIsSearchOpen(false);
   };
 
-  // --- Эффекты (без изменений) ---
+  // --- Эффекты ---
   useEffect(() => {
-    document.documentElement.classList.add('dark');
-
     const handleResize = () => {
-      const newIsDesktop = window.innerWidth >= 1280;
+      const newIsDesktop = window.innerWidth >= 1024;
       setIsDesktop(newIsDesktop);
     };
     window.addEventListener('resize', handleResize);
@@ -148,11 +159,11 @@ function App() {
       window.removeEventListener('resize', setAppHeight);
       clearTimeout(timer);
     }
-  }, []);
+  }, []); // <-- Зависимость 'theme' здесь не нужна
 
   console.log(`%c${LOG_PREFIX_DATA} Состояние рендера:`, LOG_STYLE_DATA, { isLoading, error: error ?? 'Нет' });
 
-  // --- Общие пропсы для View ---
+  // --- ОБНОВЛЕНИЕ: Передаем ВСЕ пропсы в commonProps ---
   const commonProps = {
     isLoading,
     error,
@@ -167,46 +178,68 @@ function App() {
     setIsSearchOpen,
     schedule // Передаем накопленный schedule
   };
+  // --- КОНЕЦ ОБНОВЛЕНИЯ ---
 
   return (
-    <main className="dark bg-background text-foreground h-[var(--app-height)] w-full overflow-hidden p-2 sm:p-4 flex flex-col
-                   xl:max-w-[1200px] xl:mx-auto xl:my-4 xl:rounded-xl xl:shadow-2xl xl:h-[calc(var(--app-height)-2rem)]">
+    <NotesProvider>
+      <main className="bg-background text-foreground h-[var(--app-height)] w-full overflow-hidden p-2 sm:p-4 flex flex-col
+                    lg:max-w-100% lg:mx-auto lg:my-4 lg:rounded-xl lg:shadow-2xl lg:h-[calc(var(--app-height)-2rem)]">
 
-      <header className={cn(
-        "flex-shrink-0 mb-4 px-2 sm:px-0 flex items-center justify-center sm:justify-center gap-3 mt-2 sm:mt-0 xl:hidden",
-        !isHeaderVisible && "hidden"
-      )}>
-        <img src="/logo.png" alt="Logo" className="h-10 w-auto rounded-full" />
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Orarul Cursurilor</h1>
-      </header>
+        <header className={cn(
+          "flex-shrink-0 mb-4 px-2 sm:px-0 flex items-center justify-between sm:justify-center gap-3 mt-2 sm:mt-0 lg:hidden",
+          !isHeaderVisible && "hidden"
+        )}>
+          
+          {/* === НОВАЯ КНОПКА (Слева) === */}
+          <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-10 w-10">
+            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
 
-      {isDesktop ? (
-        <DesktopView {...commonProps} />
-      ) : (
-        <MobileView {...commonProps} isInitialLoad={isInitialLoad} setIsHeaderVisible={setIsHeaderVisible} />
-      )}
+          {/* === Обертка для Лого и Заголовка (Центр) === */}
+          <div className="flex items-center gap-3">
+            <img src="/vite.png" alt="Logo" className="h-10 w-auto rounded-full" />
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Orarul Cursurilor</h1>
+          </div>
 
-      {/* Окно поиска (без изменений) */}
-      <CommandDialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-        <CommandInput placeholder={`Căutare (${searchType})...`} />
-        {isLoading && !searchOptions[searchType]?.length ? (
-          <div className="p-6 text-center text-sm">Se încarcă...</div>
+          {/* === Пустой 'div' для выравнивания (Справа) === */}
+          <div className="h-10 w-10 sm:hidden"></div>
+
+        </header>
+
+        {isDesktop ? (
+          // --- ОБНОВЛЕНИЕ: Передаем 'theme' и 'toggleTheme' И все 'commonProps' ---
+          <DesktopView {...commonProps} theme={theme} toggleTheme={toggleTheme} />
         ) : (
-          <CommandList>
-            <CommandEmpty>Niciun rezultat.</CommandEmpty>
-            {searchOptions[searchType] && searchOptions[searchType].length > 0 && (
-              <CommandGroup heading="Rezultate">
-                {searchOptions[searchType].map((item: SearchOption) => ( // Явно указываем тип 'SearchOption'
-                  <CommandItem key={item.id} value={item.name} onSelect={() => handleSearchSelect(item)}>
-                    {item.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-          </CommandList>
+          <MobileView {...commonProps} isInitialLoad={isInitialLoad} setIsHeaderVisible={setIsHeaderVisible} />
         )}
-      </CommandDialog>
-    </main>
+
+        {/* Окно поиска (без изменений) */}
+        <CommandDialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+          <CommandInput placeholder={`Căutare (${searchType})...`} />
+          {isLoading && !searchOptions[searchType]?.length ? (
+            // --- ПЕРЕВОД ---
+            <div className="p-6 text-center text-sm">Se încarcă...</div>
+          ) : (
+            <CommandList>
+              {/* --- ПЕРЕВОД --- */}
+              <CommandEmpty>Niciun rezultat.</CommandEmpty>
+              {searchOptions[searchType] && searchOptions[searchType].length > 0 && (
+                // --- ПЕРЕВОД ---
+                <CommandGroup heading="Rezultate">
+                  {searchOptions[searchType].map((item: SearchOption) => ( // Явно указываем тип 'SearchOption'
+                    <CommandItem key={item.id} value={item.name} onSelect={() => handleSearchSelect(item)}>
+                      {item.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          )}
+        </CommandDialog>
+      </main>
+    </NotesProvider>
   );
 }
 

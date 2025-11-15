@@ -60,6 +60,13 @@ export function useSchedule({
   const fetchedRequestsRef = useRef(new Set<string>());
 
   // ---
+  // --- НОВЫЙ КОД: Ref для отслеживания *текущего* запроса (для фикса "гонки")
+  // ---
+  const currentQueryRef = useRef<string>(`${searchType}-${searchQuery}`);
+  // ---
+  // ---
+
+  // ---
   // ---
   // --- НОВЫЙ ЭФФЕКТ ДЛЯ ОЧИСТКИ КЭША ---
   // ---
@@ -69,6 +76,11 @@ export function useSchedule({
   // другой поиск), мы полностью очищаем старые данные.
   useEffect(() => {
     console.log(`%c${LOG_PREFIX_HOOK} Смена контекста: ${searchType} / ${searchQuery}. Очистка...`, LOG_STYLE_HOOK);
+    
+    // --- ИЗМЕНЕНИЕ: Устанавливаем ключ текущего запроса ---
+    currentQueryRef.current = `${searchType}-${searchQuery}`;
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
     // Сбрасываем уроки
     setAllLessons([]);
     // Сбрасываем кэш запрошенных недель
@@ -82,13 +94,27 @@ export function useSchedule({
   // ---
   // ---
 
+
+  // --- ИЗМЕНЕНИЕ: Переносим fetchSchedule внутрь useEffect ---
+  // --- (чтобы он мог захватить 'isStale' флаг) ---
+  
   // --- Эффект для загрузки данных ---
   useEffect(() => {
-    
+
+    // --- ИЗМЕНЕНИЕ: Флаг "устаревания" запроса ---
+    // (Этот флаг будет 'true', если эффект "очистился" до завершения fetch)
+    let isStale = false;
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
+
     // --- ИЗМЕНЕНИЕ: Функция теперь ожидает 'startDateOfWeekStr' ---
     const fetchSchedule = async (week: number, startDateOfWeekStr: string) => {
       // setIsLoading(true); // Управляется снаружи
       setError(null);
+
+      // --- ИЗМЕНЕНИЕ: Генерируем ключ запроса для проверки "устаревания" ---
+      const fetchQueryKey = currentQueryRef.current; 
+      // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
       try {
         const params = new URLSearchParams({
@@ -127,6 +153,25 @@ export function useSchedule({
              throw new Error("Некорректный формат данных от сервера.");
         }
 
+        // ---
+        // ---
+        // --- ГЛАВНЫЙ ФИКС "ГОНКИ СОСТОЯНИЙ" ---
+        // ---
+        // ---
+        // Если isStale = true (значит, пользователь уже переключил тип поиска)
+        // ИЛИ
+        // Если fetchQueryKey (старый) не совпадает с currentQueryRef.current (новым)
+        // ... то мы БЛОКИРУЕМ этот вызов setAllLessons.
+        if (isStale || fetchQueryKey !== currentQueryRef.current) {
+           console.warn(`%c${LOG_PREFIX_ERROR} Блокирован устаревший запрос! (Ожидался: ${currentQueryRef.current}, Получен: ${fetchQueryKey})`, LOG_STYLE_ERROR);
+           return; 
+        }
+        // ---
+        // ---
+        // --- КОНЕЦ ФИКСА ---
+        // ---
+        // ---
+
         // --- ИЗМЕНЕНИЕ: Добавляем данные, а не заменяем ---
         // Эта логика теперь безопасна, так как allLessons очищается
         // при смене query/type благодаря новому useEffect.
@@ -140,10 +185,17 @@ export function useSchedule({
 
       } catch (e: any) {
         console.error(`%c${LOG_PREFIX_ERROR} Ошибка при загрузке расписания: ${e.message}`, LOG_STYLE_ERROR, e);
-        setError(`Не удалось загрузить расписание. ${e.message}`);
-        // Не очищаем расписание при ошибке, чтобы не терять другие недели
+        // --- ИЗМЕНЕНИЕ: Проверяем 'isStale' перед установкой ошибки ---
+        if (!isStale) {
+          setError(`Не удалось загрузить расписание. ${e.message}`);
+        }
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
       } finally {
-        setIsLoading(false);
+        // --- ИЗМЕНЕНИЕ: Проверяем 'isStale' ---
+        if (!isStale) {
+          setIsLoading(false);
+        }
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
         console.log(`%c${LOG_PREFIX_FINISH} fetchSchedule завершен (Ключ: ${searchType}-${searchQuery}-${week}).`, LOG_STYLE_FINISH);
       }
     };
@@ -191,6 +243,13 @@ export function useSchedule({
     
     if (activeFetches === 0) {
         setIsLoading(false); // Если новых запросов не было, выключаем загрузку
+    }
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
+    // --- ИЗМЕНЕНИЕ: Добавляем функцию очистки ---
+    return () => {
+        isStale = true;
+        console.log(`%c${LOG_PREFIX_HOOK} Эффект очищен. isStale = true.`, LOG_STYLE_HOOK);
     }
     // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
@@ -256,4 +315,3 @@ export function useSchedule({
   return { isLoading, error, getScheduleForDate, searchOptions, schedule: allLessons };
   // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 }
-

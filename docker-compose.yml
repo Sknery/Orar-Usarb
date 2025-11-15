@@ -1,6 +1,3 @@
-# Задаем имя проекта, чтобы имена контейнеров были предсказуемыми (например, orar-usarb-schedule-api-1)
-name: orar-usarb
-
 services:
   schedule-client:
     build:
@@ -26,14 +23,16 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    restart: always
-    environment:
+    restart: unless-stopped
+    environment: 
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_DATABASE=${DB_DATABASE}
       - API_PORT=${API_PORT}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     # ИЗМЕНЕНИЕ: Меняем команду на запуск в режиме разработки с отслеживанием файлов.
     command: pnpm run start:dev
     ports:

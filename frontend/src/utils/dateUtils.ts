@@ -14,4 +14,3 @@ export function getWeekDays(date: Date): Date[] {
   // --- КОНЕЦ ИЗМЕНЕНИЯ ---
   return eachDayOfInterval({ start: weekStart, end: weekEnd });
 }
-
