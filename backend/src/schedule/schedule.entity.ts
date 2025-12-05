@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, UpdateDateColumn } from 'typeorm';
 
 @Entity('schedules')
 export class Schedule {
@@ -28,5 +28,8 @@ export class Schedule {
 
   @Column({ name: 'professor_color' })
   professorColor: string;
-}
 
+  // --- НОВОЕ ПОЛЕ: Автоматически обновляется при записи/изменении ---
+  @UpdateDateColumn()
+  updatedAt: Date;
+}

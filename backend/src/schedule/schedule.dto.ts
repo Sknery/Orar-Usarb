@@ -5,13 +5,13 @@ export interface ScheduleEntry {
   date: string; // 'YYYY-MM-DD'
   time: string; // 'HH:MM'
   subject: string;
-  // --- ИСПРАВЛЕНО: Обновляем тип на основе твоего списка ---
   type: 'Prelegere' | 'Seminar' | 'Practică' | 'Laborator' | 'Proiect de Curs' | 'Evaluare periodică' | 'Consultație' | 'Examinare' | 'Reexaminare' | 'Seminar prealabil' | 'Seminar de totalizare' | string;
-  // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
   professor: string;
   professorColor: string;
   classroom: string;
   group: string;
+  // --- НОВОЕ ПОЛЕ: Время последнего обновления этой конкретной записи ---
+  updatedAt?: string; 
 }
 
 /**

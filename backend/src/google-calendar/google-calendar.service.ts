@@ -1,27 +1,19 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common'; 
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-// --- ИСПРАВЛЕНИЕ 1: Убираем прямой импорт 'OAuth2Client' ---
-// import { OAuth2Client } from 'google-auth-library'; (УДАЛЕНО)
-// --- Импортируем 'Auth' из 'googleapis' ---
-import { Auth, google, calendar_v3 } from 'googleapis'; 
+import { google, calendar_v3 } from 'googleapis'; //
 import { UserToken } from './user-token.entity';
-// --- НОВЫЕ ИМПОРТЫ ---
 import { ScheduleEntry } from '../schedule/schedule.dto';
-import { addDays, parseISO, addMinutes } from 'date-fns'; // <-- ДОБАВЛЕН 'addMinutes'
-// --- КОНЕЦ НОВЫХ ИМПОРТОВ ---
-
+import { addDays, parseISO, addMinutes } from 'date-fns';
 
 @Injectable()
-export class GoogleCalendarService implements OnModuleInit {
+export class GoogleCalendarService { 
   private readonly logger = new Logger(GoogleCalendarService.name);
-  // --- ИСПРАВЛЕНИЕ 1: Используем тип Auth.OAuth2Client ---
-  private oAuth2Client: Auth.OAuth2Client;
+  
   private G_CLIENT_ID: string;
   private G_CLIENT_SECRET: string;
-  private G_REDIRECT_URI = 'http://localhost:3000/google-calendar/oauth-callback';
-  // --- НОВЫЙ ID ---
+  private G_REDIRECT_URI: string;
   private readonly EVENT_SIGNATURE = 'USARB_ORAR_EVENT_V1';
 
   constructor(
@@ -29,232 +21,265 @@ export class GoogleCalendarService implements OnModuleInit {
     @InjectRepository(UserToken)
     private readonly tokenRepository: Repository<UserToken>,
   ) {
-    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET');
+    this.G_CLIENT_ID = this.configService.get<string>('GOOGLE_CLIENT_ID')!;
+    this.G_CLIENT_SECRET = this.configService.get<string>('GOOGLE_CLIENT_SECRET')!;
+    this.G_REDIRECT_URI = this.configService.get<string>('GOOGLE_CALLBACK_URL') 
+      || 'http://localhost:3000/google-calendar/oauth-callback'; 
+  }
 
-    if (!clientId || !clientSecret) {
-      this.logger.error('!!! GOOGLE_CLIENT_ID или GOOGLE_CLIENT_SECRET не найдены в .env !!!');
-      throw new Error('Google OAuth Client ID/Secret не настроены.');
-    }
-    
-    this.G_CLIENT_ID = clientId;
-    this.G_CLIENT_SECRET = clientSecret;
+  private sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
-    // --- ИСПРАВЛЕНИЕ 1: Используем 'google.auth.OAuth2' ---
-    this.oAuth2Client = new google.auth.OAuth2(
+  private createOAuthClient() {
+    return new google.auth.OAuth2(
       this.G_CLIENT_ID,
       this.G_CLIENT_SECRET,
       this.G_REDIRECT_URI,
     );
   }
 
-  async onModuleInit() {
-    await this.loadTokenFromDb();
-  }
-  
-  /**
-   * Загружает токен из БД и устанавливает его в oAuth2Client
-   */
-  private async loadTokenFromDb(): Promise<boolean> {
-    const token = await this.getLatestToken();
-    if (token) {
-      this.oAuth2Client.setCredentials({
-        refresh_token: token.refreshToken,
-      });
-      this.logger.log('loadTokenFromDb: Refresh токен загружен в oAuth2Client.');
-      return true;
-    } else {
-      this.logger.warn('loadTokenFromDb: Refresh токен не найден в БД.');
-      return false;
-    }
-  }
-
-  /**
-   * Генерирует URL для страницы согласия Google
-   */
-  getAuthUrl(): string {
-    const authUrl = this.oAuth2Client.generateAuthUrl({
+  getAuthUrl(userId: string): string {
+    const oauth2Client = this.createOAuthClient();
+    const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline', 
       scope: [
         'https://www.googleapis.com/auth/calendar.events',
         'https://www.googleapis.com/auth/calendar.readonly',
+        // --- НОВЫЕ SCOPES для получения профиля ---
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile',
       ],
-      prompt: 'consent',
+      prompt: 'consent', // Важно для получения refresh_token при смене аккаунта
+      state: userId, 
     });
-    this.logger.log(`Сгенерирован Auth URL: ${authUrl}`);
     return authUrl;
   }
 
-  /**
-   * Обрабатывает колбэк от Google, получает токены и сохраняет refresh_token
-   */
-  async handleOAuthCallback(code: string): Promise<void> {
+  async handleOAuthCallback(code: string, userId: string): Promise<void> {
+    const oauth2Client = this.createOAuthClient();
     try {
-      this.logger.log('handleOAuthCallback: Обмен кода на токены...');
-      const { tokens } = await this.oAuth2Client.getToken(code);
+      const { tokens } = await oauth2Client.getToken(code);
       const refreshToken = tokens.refresh_token;
+
+      // Устанавливаем credentials, чтобы сделать запрос к UserInfo
+      oauth2Client.setCredentials(tokens);
+
+      // --- ПОЛУЧЕНИЕ ИНФОРМАЦИИ О ПРОФИЛЕ ---
+      const oauth2 = google.oauth2({
+        auth: oauth2Client,
+        version: 'v2',
+      });
       
+      const userInfo = await oauth2.userinfo.get();
+      const email = userInfo.data.email;
+      const name = userInfo.data.name;
+      const picture = userInfo.data.picture;
+      
+      this.logger.log(`[${userId}] Авторизован аккаунт: ${email}`);
+
       if (!refreshToken) {
-        this.logger.warn('!!! REFRESH TOKEN не получен.');
+         // Если refresh_token не пришел (пользователь уже давал доступ),
+         // пробуем найти существующую запись и обновить только профиль.
+         // Но если записи нет, мы в тупике (нужен prompt: consent).
+         const existing = await this.tokenRepository.findOne({ where: { id: userId } });
+         if (existing) {
+             existing.email = email || existing.email;
+             existing.name = name || existing.name;
+             existing.picture = picture || existing.picture;
+             await this.tokenRepository.save(existing);
+             return;
+         }
+         this.logger.warn(`[${userId}] REFRESH TOKEN не получен и запись не найдена.`);
       } else {
-        this.logger.log('✅ REFRESH TOKEN получен!');
-        const newToken = this.tokenRepository.create({
-          id: 1, 
+        const tokenEntry = this.tokenRepository.create({
+          id: userId, 
           refreshToken: refreshToken,
+          // Сохраняем данные профиля
+          email: email || '',
+          name: name || '',
+          picture: picture || '',
         });
-        await this.tokenRepository.save(newToken);
-        this.logger.log(`✅ Токен успешно сохранен в БД. ID: ${newToken.id}`);
+        await this.tokenRepository.save(tokenEntry);
+        this.logger.log(`[${userId}] Токен и профиль успешно сохранены.`);
       }
-      this.oAuth2Client.setCredentials(tokens);
-    } catch (error) {
-      this.logger.error(`Ошибка при обмене кода на токены: ${error.message}`);
-      throw new Error('Ошибка обмена кода на токен');
+    } catch (error: any) {
+      this.logger.error(`Ошибка обмена кода: ${error.message}`);
+      throw new Error('Eroare schimb token');
     }
   }
 
-  /**
-   * Проверяет, есть ли у нас в БД токен.
-   */
-  async checkConnectionStatus(): Promise<boolean> {
-    return this.loadTokenFromDb();
+  // --- ОБНОВЛЕННЫЙ МЕТОД: Возвращаем не только boolean, но и данные ---
+  async getConnectionStatus(userId: string): Promise<{ isConnected: boolean; email?: string; name?: string; picture?: string }> {
+    const token = await this.tokenRepository.findOne({ where: { id: userId } });
+    if (!token) {
+        return { isConnected: false };
+    }
+    return { 
+        isConnected: true,
+        email: token.email,
+        name: token.name,
+        picture: token.picture
+    };
   }
-
-  // ---
-  // --- НОВАЯ ЛОГИКА: Синхронизация недели
-  // ---
   
-  /**
-   * Синхронизирует (очищает и добавляет) уроки за неделю в Google Calendar
-   */
-  async syncWeek(lessons: ScheduleEntry[], weekStartDate: string) {
-    this.logger.log(`[syncWeek] Запрос на синхронизацию ${lessons.length} уроков, начиная с ${weekStartDate}`);
+  // --- НОВЫЙ МЕТОД: Отключение пользователя ---
+  async disconnectUser(userId: string): Promise<void> {
+      await this.tokenRepository.delete({ id: userId });
+      this.logger.log(`[${userId}] Пользователь отключил интеграцию.`);
+  }
+
+  // syncWeek оставляем без изменений, но используем createOAuthClient
+  async syncWeek(lessons: ScheduleEntry[], weekStartDate: string, userId: string) {
+    // ... (код syncWeek из предыдущих версий, используй тот, что был в проекте)
+    // ВНИМАНИЕ: Для краткости я не дублирую весь метод syncWeek здесь, 
+    // так как меняется только логика авторизации в начале файла.
+    // Убедитесь, что внутри syncWeek используется this.createOAuthClient()
     
-    // 1. Убеждаемся, что oAuth2Client готов
-    if (!this.oAuth2Client.credentials.refresh_token) {
-      const loaded = await this.loadTokenFromDb();
-      if (!loaded) {
-        this.logger.error('[syncWeek] Ошибка: Попытка синхронизации без refresh_token в БД.');
-        throw new Error('Utilizatorul не аутентифицирован (токен не найден).');
-      }
+    // Начало метода для контекста:
+    this.logger.log(`[syncWeek] User: ${userId}, Lessons: ${lessons.length}`);
+    const userToken = await this.tokenRepository.findOne({ where: { id: userId } });
+    if (!userToken || !userToken.refreshToken) {
+      throw new Error('Utilizator neconectat (Token lipsă).');
     }
 
-    // 2. Создаем клиент API Календаря
-    // --- ИСПРАВЛЕНИЕ ОШИБКИ 1 (auth) ---
-    const calendar = google.calendar({ version: 'v3', auth: this.oAuth2Client });
-    // --- КОНЕЦ ИСПРАВЛЕНИЯ 1 ---
+    const oauth2Client = this.createOAuthClient();
+    oauth2Client.setCredentials({
+      refresh_token: userToken.refreshToken
+    });
     
-    // 3. Определяем временные рамки и ID для поиска
+    // Дальше код такой же как был...
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     const weekStart = parseISO(weekStartDate);
-    const weekEnd = addDays(weekStart, 7); // 7 дней
+    const weekEnd = addDays(weekStart, 7);
     const timeZone = 'Europe/Chisinau';
-
-    try {
-      // 4. ОЧИСТКА: Ищем все *наши* старые события за эту неделю
-      this.logger.log(`[syncWeek] Поиск старых событий для удаления (с ${weekStart.toISOString()} до ${weekEnd.toISOString()})...`);
-      
-      // --- ИСПРАВЛЕНИЕ ОШИБКИ 2 (list params) ---
+    
+    // ... остальная логика синхронизации ...
+    // Вставь сюда старую логику удаления и создания ивентов
+     try {
       const listParams: calendar_v3.Params$Resource$Events$List = {
         calendarId: 'primary',
         timeMin: weekStart.toISOString(),
         timeMax: weekEnd.toISOString(),
-        // --- ИСПРАВЛЕНИЕ: 'privateExtendedProperty' должен быть МАССИВОМ ---
-        privateExtendedProperty: [`app_name=${this.EVENT_SIGNATURE}`], // Ищем только события с нашей меткой
+        privateExtendedProperty: [`app_name=${this.EVENT_SIGNATURE}`],
         showDeleted: false,
       };
-      const eventsToDeleteResponse = await calendar.events.list(listParams);
-      // --- КОНЕЦ ИСПРАВЛЕНИЯ 2 ---
-
-      // --- ИСПРАВЛЕНИЕ ОШИБКИ 3 (data.items) ---
-      const oldEvents = eventsToDeleteResponse.data.items;
-      // --- КОНЕЦ ИСПРАВЛЕНИЯ 3 ---
+      const eventsList = await calendar.events.list(listParams);
+      const oldEvents = eventsList.data.items;
 
       if (oldEvents && oldEvents.length > 0) {
-        this.logger.log(`[syncWeek] Найдено ${oldEvents.length} старых событий. Удаление...`);
         for (const event of oldEvents) {
           if (event.id) {
-            await calendar.events.delete({
-              calendarId: 'primary',
-              eventId: event.id,
-            });
+            try {
+              await calendar.events.delete({ calendarId: 'primary', eventId: event.id });
+              await this.sleep(150);
+            } catch (delErr: any) {
+              this.logger.warn(`Ошибка удаления события ${event.id}: ${delErr.message}`);
+            }
           }
         }
-        this.logger.log(`[syncWeek] Старые события удалены.`);
-      } else {
-        this.logger.log(`[syncWeek] Старые события не найдены. Пропускаем удаление.`);
       }
 
-      // 5. ДОБАВЛЕНИЕ: Создаем новые события
-      this.logger.log(`[syncWeek] Добавление ${lessons.length} новых событий...`);
       for (const lesson of lessons) {
         try {
-          // Расчет времени начала и конца (пара = 90 минут)
           const startTime = parseISO(`${lesson.date}T${lesson.time}:00`);
-          const endTime = addMinutes(startTime, 90); // +90 минут
+          const endTime = addMinutes(startTime, 90);
 
-          const eventResource: calendar_v3.Schema$Event = {
-            summary: lesson.subject,
-            location: lesson.classroom,
-            description: `Profesor: ${lesson.professor}\nTip: ${lesson.type}\nGrupa: ${lesson.group}\n\n(Sincronizat de Orar USARB App)`,
-            start: {
-              dateTime: startTime.toISOString(),
-              timeZone: timeZone,
-            },
-            end: {
-              dateTime: endTime.toISOString(),
-              timeZone: timeZone,
-            },
-            // Метка, чтобы мы могли найти это событие позже
-            extendedProperties: {
-              private: {
-                app_name: this.EVENT_SIGNATURE,
-              },
-            },
-            // Напоминание за 10 минут
-            reminders: {
-              useDefault: false,
-              overrides: [{ method: 'popup', minutes: 10 }],
-            },
-          };
-
-          // --- ИСПРАВЛЕНИЕ ОШИБКИ 4 (insert params) ---
           await calendar.events.insert({
             calendarId: 'primary',
-            requestBody: eventResource, // 'resource' был заменен на 'requestBody'
+            requestBody: {
+              summary: lesson.subject,
+              location: lesson.classroom,
+              description: `Profesor: ${lesson.professor}\nTip: ${lesson.type}\nGrupa: ${lesson.group}\n\n(Sincronizat de Orar USARB App)`,
+              start: { dateTime: startTime.toISOString(), timeZone },
+              end: { dateTime: endTime.toISOString(), timeZone },
+              extendedProperties: {
+                private: { app_name: this.EVENT_SIGNATURE },
+              },
+              reminders: {
+                useDefault: false,
+                overrides: [{ method: 'popup', minutes: 10 }],
+              },
+            },
           });
-          // --- КОНЕЦ ИСПРАВЛЕНИЯ 4 ---
-          
-        } catch (lessonError) {
-           this.logger.error(`[syncWeek] Ошибка при добавлении урока "${lesson.subject}": ${lessonError.message}`);
-           // Не останавливаем весь процесс, если одна пара не удалась
+          await this.sleep(200);
+
+        } catch (e: any) {
+           this.logger.warn(`Ошибка добавления урока: ${e.message}`);
         }
       }
-      this.logger.log(`[syncWeek] ✅ Успешная синхронизация ${lessons.length} уроков.`);
+      
       return { success: true, count: lessons.length };
-
-    } catch (error) {
-      this.logger.error(`[syncWeek] КРИТИЧЕСКАЯ ОШИБКА во время синхронизации: ${error.message}`, error.stack);
-      
-      if (error.code === 401) {
-         this.logger.error('[syncWeek] Ошибка 401. Токен недействителен. Удаляем токен из БД.');
-         // Если токен не сработал, удаляем его, чтобы
-         // пользователь мог пройти аутентификацию заново.
-         await this.tokenRepository.delete({ id: 1 });
+    } catch (error: any) {
+       // Обработка ошибок как в старом коде
+      if (error.code === 401 || error.message.includes('invalid_grant')) {
+         await this.tokenRepository.delete({ id: userId });
       }
-      
-      throw new Error(`Eroare la sincronizare: ${error.message}`);
-    }
+      throw new Error(`Eroare Google API: ${error.message}`);
+    } 
   }
 
+  async unsyncWeek(weekStartDate: string, userId: string): Promise<{ success: boolean; count: number }> {
+    this.logger.log(`[unsyncWeek] User: ${userId}, StartDate: ${weekStartDate}`);
 
-  // --- Вспомогательные методы ---
+    const userToken = await this.tokenRepository.findOne({ where: { id: userId } });
+    if (!userToken || !userToken.refreshToken) {
+      throw new Error('Utilizator neconectat (Token lipsă).');
+    }
 
-  private async getLatestToken(): Promise<UserToken | null> {
+    const oauth2Client = this.createOAuthClient();
+    oauth2Client.setCredentials({
+      refresh_token: userToken.refreshToken
+    });
+
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    
+    // Определяем диапазон времени (так же, как при синхронизации)
+    const weekStart = parseISO(weekStartDate);
+    const weekEnd = addDays(weekStart, 7);
+
     try {
-      const token = await this.tokenRepository.findOne({ where: { id: 1 } });
-      return token || null;
-    } catch (error) {
-      this.logger.error('Ошибка при поиске токена в БД', error);
-      return null;
+      // 1. Ищем события с нашей подписью в этом диапазоне
+      const listParams: calendar_v3.Params$Resource$Events$List = {
+        calendarId: 'primary',
+        timeMin: weekStart.toISOString(),
+        timeMax: weekEnd.toISOString(),
+        privateExtendedProperty: [`app_name=${this.EVENT_SIGNATURE}`], // Фильтруем только "наши" события
+        showDeleted: false,
+      };
+
+      const eventsList = await calendar.events.list(listParams);
+      const eventsToDelete = eventsList.data.items;
+      let deletedCount = 0;
+
+      if (eventsToDelete && eventsToDelete.length > 0) {
+        this.logger.log(`[unsyncWeek] Found ${eventsToDelete.length} events to delete.`);
+        
+        // 2. Удаляем найденные события
+        for (const event of eventsToDelete) {
+          if (event.id) {
+            try {
+              await calendar.events.delete({ calendarId: 'primary', eventId: event.id });
+              deletedCount++;
+              // Небольшая задержка, чтобы не превысить лимиты Google API
+              await this.sleep(100); 
+            } catch (delErr: any) {
+              this.logger.warn(`Ошибка удаления события ${event.id}: ${delErr.message}`);
+            }
+          }
+        }
+      } else {
+        this.logger.log(`[unsyncWeek] No events found to delete.`);
+      }
+
+      return { success: true, count: deletedCount };
+
+    } catch (error: any) {
+      if (error.code === 401 || error.message.includes('invalid_grant')) {
+        await this.tokenRepository.delete({ id: userId });
+      }
+      this.logger.error(`Eroare Google API (unsync): ${error.message}`);
+      throw new Error(`Eroare la ștergerea din Google Calendar: ${error.message}`);
     }
   }
 }

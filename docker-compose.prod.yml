@@ -6,9 +6,9 @@ services:
     image: schedule-client-prod
     build:
       context: ./frontend
-      dockerfile: Dockerfile.prod # Указываем наш новый production Dockerfile
+      dockerfile: Dockerfile.prod
     ports:
-      - "8080:80" # Маппим порт 8080 на порт 80 Nginx внутри контейнера
+      - "8080:80"
     restart: unless-stopped
     depends_on:
       - schedule-api-prod
@@ -20,10 +20,10 @@ services:
     image: schedule-api-prod
     build:
       context: ./backend
-      dockerfile: Dockerfile.prod # Указываем наш новый production Dockerfile
+      dockerfile: Dockerfile.prod
     restart: unless-stopped
     environment:
-      - DB_HOST=schedule-db-prod # Внутреннее имя хоста БД
+      - DB_HOST=schedule-db-prod
       - DB_PORT=${DB_PORT}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -31,15 +31,19 @@ services:
       - API_PORT=${API_PORT}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      # --- ИЗМЕНЕНИЯ: Добавляем переменные для домена ---
-      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      
+      # === ИСПРАВЛЕНИЕ ЗДЕСЬ ===
+      # Имя переменной должно совпадать с тем, что в коде (строка 977 файла backend/src/google-calendar/google-calendar.service.ts)
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL} 
+      
       - FRONTEND_URL=${FRONTEND_URL}
-      # --- КОНЕЦ ИЗМЕНЕНИЙ ---
+      # =========================
+      
     ports:
-      - "3000:3000" # Открываем порт 3000
+      - "3000:3000"
     depends_on:
       schedule-db-prod:
-        condition: service_healthy # Ждем, пока БД будет готова
+        condition: service_healthy
     networks:
       - schedule-net-prod
 
@@ -51,12 +55,11 @@ services:
       - POSTGRES_DB=${DB_DATABASE}
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-    # ВАЖНО: Мы НЕ открываем порт 5432 наружу. 
-    # Бэкенд общается с ней по внутренней сети (schedule-net-prod).
     volumes:
-      - postgres_data_prod:/var/lib/postgresql/data # Сохраняем данные
+      - postgres_data_prod:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      # ВАЖНО: Добавляем эту строку
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -64,8 +67,8 @@ services:
       - schedule-net-prod
 
 volumes:
-  postgres_data_prod: # Имя тома для данных БД
+  postgres_data_prod:
 
 networks:
-  schedule-net-prod: # Имя внутренней сети
+  schedule-net-prod:
     driver: bridge

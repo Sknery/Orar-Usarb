@@ -3,13 +3,13 @@ export interface ScheduleEntry {
   date: string;
   time: string;
   subject: string;
-  // --- ИСПРАВЛЕНО: Обновляем тип на основе твоего списка ---
   type: 'Prelegere' | 'Seminar' | 'Practică' | 'Laborator' | 'Proiect de Curs' | 'Evaluare periodică' | 'Consultație' | 'Examinare' | 'Reexaminare' | 'Seminar prealabil' | 'Seminar de totalizare' | string;
-  // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
   professor: string;
   professorColor: string;
   classroom: string;
   group: string;
+  // --- НОВОЕ ПОЛЕ: Дата последнего обновления ---
+  updatedAt?: string;
 }
 
 export interface ScheduleData {
@@ -22,9 +22,6 @@ export interface SearchOption {
 }
 
 export type SearchType = "grupe" | "profesori" | "aule";
-
-
-// --- ДОБАВЛЕНО: Эти типы нужны для хука useSchedule ---
 
 /**
  * Описывает структуру списков для поиска (из бэкенда).

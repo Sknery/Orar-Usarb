@@ -1,82 +1,105 @@
-import { Controller, Get, Query, Res, Logger, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Query, Res, Logger, Post, Body, HttpCode, HttpStatus, Delete } from '@nestjs/common'; // Добавлен Delete
 import { GoogleCalendarService } from './google-calendar.service';
+import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
-// --- НОВЫЙ ИМПОРТ ---
 import { ScheduleEntry } from '../schedule/schedule.dto';
-// --- КОНЕЦ ИМПОРТА ---
 
 @Controller('google-calendar')
 export class GoogleCalendarController {
   private readonly logger = new Logger(GoogleCalendarController.name);
+  private readonly frontendUrl: string;
 
-  constructor(private readonly googleCalendarService: GoogleCalendarService) {}
+  constructor(
+    private readonly googleCalendarService: GoogleCalendarService,
+    private readonly configService: ConfigService,
+  ) {
+    this.frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+  }
 
   @Get('auth-url')
-  async getAuthUrl(@Res() res: Response) {
-    this.logger.log('Получен запрос на /api/google-calendar/auth-url');
+  async getAuthUrl(
+    @Query('userId') userId: string,
+    @Res() res: Response
+  ) {
+    if (!userId) {
+       return res.status(400).send('User ID este necesar');
+    }
     try {
-      const authUrl = this.googleCalendarService.getAuthUrl();
+      const authUrl = this.googleCalendarService.getAuthUrl(userId);
       res.redirect(authUrl);
     } catch (error) {
       this.logger.error('Ошибка при генерации authUrl', error);
-      res.status(500).send('Eroare la generarea URL-ului de autentificare');
+      res.status(500).send('Eroare server');
     }
   }
 
   @Get('oauth-callback')
   async oauthCallback(
     @Query('code') code: string,
-    @Res() res: Response, // Используем @Res()
+    @Query('state') state: string, 
+    @Res() res: Response,
   ) {
-    this.logger.log(`GET /oauth-callback - получен код: ${code ? '...' : 'НЕТ КОДА'}`);
-    if (!code) {
-      this.logger.warn('GET /oauth-callback - Код не предоставлен в запросе');
-      return res.redirect('http://localhost:5173?google-auth-error=true');
-    }
+    if (!code) return res.redirect(`${this.frontendUrl}?google-auth-error=no-code`);
+    if (!state) return res.redirect(`${this.frontendUrl}?google-auth-error=no-state`);
+
+    const userId = state; 
 
     try {
-      await this.googleCalendarService.handleOAuthCallback(code);
-      this.logger.log('GET /oauth-callback - Токены успешно получены и сохранены.');
-      
-      res.redirect('http://localhost:5173');
-
-    } catch (error) {
-      this.logger.error(`GET /oauth-callback - Ошибка: ${error.message}`, error.stack);
-      res.redirect('http://localhost:5173?google-auth-error=true');
+      await this.googleCalendarService.handleOAuthCallback(code, userId);
+      res.redirect(this.frontendUrl);
+    } catch (error: any) {
+      this.logger.error(`Ошибка OAuth: ${error.message}`);
+      res.redirect(`${this.frontendUrl}?google-auth-error=true`);
     }
   }
 
-  /**
-   * Проверяет, есть ли у нас в БД валидный токен.
-   */
   @Get('check-status')
-  async checkStatus() {
-    this.logger.log('GET /check-status - Проверка статуса подключения...');
-    const isConnected = await this.googleCalendarService.checkConnectionStatus();
-    this.logger.log(`GET /check-status - Статус: ${isConnected}`);
-    return { isConnected };
+  async checkStatus(@Query('userId') userId: string) {
+    if (!userId) return { isConnected: false };
+    // Теперь возвращает также email и имя
+    return await this.googleCalendarService.getConnectionStatus(userId);
   }
 
-  // ---
-  // --- НОВЫЙ ENDPOINT: Синхронизация недели
-  // ---
+  // --- НОВЫЙ МЕТОД: Отключение ---
+  @Post('disconnect')
+  @HttpCode(HttpStatus.OK)
+  async disconnect(@Body() body: { userId: string }) {
+      if (!body.userId) return { success: false };
+      await this.googleCalendarService.disconnectUser(body.userId);
+      return { success: true };
+  }
+  // --------------------------------
+
   @Post('sync-week')
-  @HttpCode(HttpStatus.OK) // Отправляем 200 OK при успехе
+  @HttpCode(HttpStatus.OK)
   async syncWeek(
-    @Body() body: { lessons: ScheduleEntry[], weekStartDate: string }
+    @Body() body: { lessons: ScheduleEntry[], weekStartDate: string, userId: string }
   ) {
-    this.logger.log(`POST /sync-week - Получен запрос на синхронизацию ${body.lessons?.length ?? 0} уроков.`);
-    if (!body.lessons || !body.weekStartDate) {
-      this.logger.warn('POST /sync-week - Неверный запрос, отсутствуют уроки или дата.');
-      return { success: false, message: 'Date invalide.' };
+    if (!body.lessons || !body.weekStartDate || !body.userId) {
+      return { success: false, message: 'Date incomplete.' };
     }
 
     try {
-      const result = await this.googleCalendarService.syncWeek(body.lessons, body.weekStartDate);
+      const result = await this.googleCalendarService.syncWeek(body.lessons, body.weekStartDate, body.userId);
       return result;
-    } catch (error) {
-      this.logger.error(`POST /sync-week - Ошибка при синхронизации: ${error.message}`);
-      // Отправляем ошибку обратно на фронтенд
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  }
+
+  @Post('unsync-week')
+  @HttpCode(HttpStatus.OK)
+  async unsyncWeek(
+    @Body() body: { weekStartDate: string, userId: string }
+  ) {
+    if (!body.weekStartDate || !body.userId) {
+      return { success: false, message: 'Date incomplete.' };
+    }
+
+    try {
+      const result = await this.googleCalendarService.unsyncWeek(body.weekStartDate, body.userId);
+      return result;
+    } catch (error: any) {
       return { success: false, message: error.message };
     }
   }

@@ -29,7 +29,7 @@ done
 # --- 1. Собираем код из frontend и backend ---
 for dir in "${SEARCH_DIRS[@]}"; do
   find "$dir" -type f \
-    \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" -o -name "*.json" -o -name "*.css" \) \
+    \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" -o -name "*.json" -o -name "*.css" -o -name "*.conf" \) \
     -not -path "*/node_modules/*" | while read -r file; do
       {
         echo "--------------------------------------------------------------------"
@@ -45,7 +45,7 @@ done
 # --- 2. Добавляем Docker-файлы из корня и поддиректорий ---
 echo "Добавляем Docker-файлы..."
 find . -maxdepth 3 -type f \
-  \( -name "Dockerfile" -o -name "docker-compose.yml" -o -name "docker-compose.yaml" -o -name ".dockerignore" \) | while read -r dockerfile; do
+  \( -name "Dockerfile.prod" -o -name "docker-compose.prod.yml" -o -name "docker-compose.prod.yaml" -o -name "Dockerfile" -o -name "docker-compose.yml" -o -name "docker-compose.yaml" -o -name ".dockerignore" \) | while read -r dockerfile; do
     {
       echo "--------------------------------------------------------------------"
       echo "--- Docker-файл: $dockerfile"

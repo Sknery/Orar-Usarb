@@ -1,31 +1,32 @@
+version: '3.8'
+
 services:
+  # 1. ФРОНТЕНД (Vite Dev Server)
   schedule-client:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    # ИЗМЕНЕНИЕ: Запускаем dev-сервер Vite. Команда возьмется из обновленного Dockerfile.
     ports:
-      # ИЗМЕНЕНИЕ: Vite в режиме разработки по умолчанию работает на порту 5173
       - "5173:5173"
     restart: unless-stopped
-    # ИЗМЕНЕНИЕ: Подключаем локальные файлы для hot-reload
-    volumes:
-      # Синхронизируем исходный код. Изменения в локальных файлах сразу появятся в контейнере.
-      - ./frontend:/app
-      # Эта строка предотвращает затирание папки node_modules в контейнере локальной.
-      - /app/node_modules
     depends_on:
       - schedule-api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     networks:
       - schedule-net
 
+  # 2. БЭКЕНД (NestJS Dev)
   schedule-api:
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
     environment: 
-      - DB_HOST=${DB_HOST}
+      # --- ИСПРАВЛЕНИЕ 1: Указываем имя контейнера БД вместо переменной ---
+      - DB_HOST=schedule-db
+      # --------------------------------------------------------------------
       - DB_PORT=${DB_PORT}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -33,22 +34,21 @@ services:
       - API_PORT=${API_PORT}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-    # ИЗМЕНЕНИЕ: Меняем команду на запуск в режиме разработки с отслеживанием файлов.
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
     command: pnpm run start:dev
     ports:
       - "3000:3000"
     depends_on:
       schedule-db:
         condition: service_healthy
-    # ИЗМЕНЕНИЕ: Подключаем локальные файлы для hot-reload
     volumes:
-      # Синхронизируем исходный код.
       - ./backend:/app
-      # Предотвращаем затирание node_modules.
       - /app/node_modules
     networks:
       - schedule-net
 
+  # 3. БАЗА ДАННЫХ (PostgreSQL)
   schedule-db:
     image: postgres:15
     restart: always
@@ -61,7 +61,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      # --- ИСПРАВЛЕНИЕ 2: Используем $$ для обращения к переменным ВНУТРИ контейнера ---
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      # -------------------------------------------------------------------------------
       interval: 5s
       timeout: 5s
       retries: 5

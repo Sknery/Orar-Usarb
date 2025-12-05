@@ -15,6 +15,12 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
+    // ИЗМЕНЕНИЕ: Разрешаем наш домен, чтобы Vite не блокировал запросы через Nginx
+    allowedHosts: [
+      'usarb-test.xyz',
+      'www.usarb-test.xyz',
+      'localhost'
+    ],
     // ИЗМЕНЕНИЕ: Добавляем прокси для перенаправления API-запросов на бэкенд
     proxy: {
       // Все запросы, начинающиеся с /api, будут перенаправлены
@@ -29,4 +35,3 @@ export default defineConfig({
     },
   },
 })
-

@@ -50,16 +50,14 @@ export class ScheduleService implements OnModuleInit {
   async onModuleInit() {
     await this.cacheMasterLists();
     
-    // --- ИЗМЕНЕНИЕ (Исправление TS Erorr): Используем локальную переменную для надежности ---
     const groups = this.cachedMasterLists.group;
     if (groups) {
       this.logger.log('[onModuleInit] Creating Group ID to Name lookup map...');
-      for (const g of groups) { // Используем 'groups'
+      for (const g of groups) {
         this.groupIdToNameMap.set(g.id, g.name);
       }
       this.logger.log(`[onModuleInit] Group map created with ${this.groupIdToNameMap.size} entries.`);
     }
-    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
   }
 
   async getSchedule(query: any): Promise<ScheduleResponseDto> {
@@ -77,18 +75,14 @@ export class ScheduleService implements OnModuleInit {
       );
       await this.cacheMasterLists();
       
-      // --- ИЗМЕНЕНИЕ (Исправление TS Error): Добавляем 'as' для
-      //     уточнения типа после 'await' ---
       const groupsForMap = this.cachedMasterLists.group as SearchOption[] | null;
       
       if (groupsForMap && this.groupIdToNameMap.size === 0) {
          this.logger.log('[getSchedule] Re-creating Group ID to Name lookup map...');
-         // 'groupsForMap' теперь 'SearchOption[]'
          for (const g of groupsForMap) {
            this.groupIdToNameMap.set(g.id, g.name);
          }
       }
-      // --- КОНЕЦ ИЗМЕНЕНИЯ ---
     }
 
     // --- Парсинг запроса ---
@@ -113,7 +107,7 @@ export class ScheduleService implements OnModuleInit {
     let baseDateOfWeek: Date | null = null;
     if (startDateOfWeek) {
       try { baseDateOfWeek = parseISO(startDateOfWeek); } 
-      catch (e) { this.logger.error(`❌ [getSchedule] Failed to parse startDateOfWeek: ${startDateOfWeek} - ${e.message}`); }
+      catch (e: any) { this.logger.error(`❌ [getSchedule] Failed to parse startDateOfWeek: ${startDateOfWeek} - ${e.message}`); }
     } else {
       this.logger.warn(`⚠️ [getSchedule] startDateOfWeek is missing in the request query.`);
     }
@@ -148,9 +142,9 @@ export class ScheduleService implements OnModuleInit {
         this.logger.warn(`[getSchedule] ❓ Could not find ID for query. ${JSON.stringify(query)}`);
         lessons = [];
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`❌ [getSchedule] API Fetch failed: ${error.message}`);
-      lessons = []; // Гарантируем, что lessons - это массив, на случай сбоя
+      lessons = [];
     }
 
     // 2. Если API вернуло данные, обрабатываем их, сохраняем в БД и возвращаем
@@ -158,8 +152,6 @@ export class ScheduleService implements OnModuleInit {
       const mappedLessons = this.mapApiLessons(lessons, group, office, baseDateOfWeek);
       const lessonsToSaveAndReturn = this.aggregateGroups(mappedLessons, group);
 
-      // Сохраняем в БД (асинхронно, в "фоне")
-      // Мы не ждем (await) этого, чтобы вернуть ответ пользователю как можно быстрее.
       this.saveScheduleToDb(lessonsToSaveAndReturn, cacheKeyType, cacheKeyValue, baseDateOfWeek)
           .catch(err => {
               this.logger.error(`❌ [getSchedule] Background DB save failed: ${err.message}`);
@@ -195,8 +187,22 @@ export class ScheduleService implements OnModuleInit {
       const cachedLessons = await queryBuilder.getMany();
       if (cachedLessons.length > 0) {
           this.logger.log(`[getSchedule] ✅ Found ${cachedLessons.length} lessons in DB cache (fallback).`);
+          
+          // --- ИЗМЕНЕНИЕ: Маппим с учетом updatedAt из БД ---
+          const mappedCachedLessons: ScheduleEntry[] = cachedLessons.map(l => ({
+              date: l.date,
+              time: l.time,
+              subject: l.subject,
+              type: l.type as any, // Приведение типа, так как в БД это string
+              professor: l.professor,
+              professorColor: l.professorColor,
+              classroom: l.classroom,
+              group: l.group,
+              updatedAt: l.updatedAt ? l.updatedAt.toISOString() : undefined // Передаем дату обновления
+          }));
+
           return {
-              schedule: cachedLessons,
+              schedule: mappedCachedLessons,
               masterLists: this.cachedMasterLists,
           };
       }
@@ -218,6 +224,9 @@ export class ScheduleService implements OnModuleInit {
    * Преобразует "сырые" уроки из API в наш формат ScheduleEntry.
    */
   private mapApiLessons(lessons: UsarbApiLesson[], group: string | null, office: string | null, baseDateOfWeek: Date | null): ScheduleEntry[] {
+    // Текущее время для всех уроков, полученных из API
+    const now = new Date().toISOString(); 
+
     return lessons.map((lesson) => {
       const professor = lesson.teacher_name || 'N/A';
       
@@ -232,7 +241,7 @@ export class ScheduleService implements OnModuleInit {
       let lessonDate = 'Invalid Date';
       if (baseDateOfWeek && lesson.day_number >= 1 && lesson.day_number <= 7) {
         try { lessonDate = format(addDays(baseDateOfWeek, lesson.day_number - 1), 'yyyy-MM-dd'); } 
-        catch (e) { this.logger.error(`❌ Error calculating lesson date for day ${lesson.day_number}: ${e.message}`); lessonDate = 'Calculation Error'; }
+        catch (e: any) { this.logger.error(`❌ Error calculating lesson date for day ${lesson.day_number}: ${e.message}`); lessonDate = 'Calculation Error'; }
       }
       
       return {
@@ -244,6 +253,8 @@ export class ScheduleService implements OnModuleInit {
         professorColor: this.getProfessorColor(professor),
         classroom: classroomName,
         group: groupName,
+        // --- НОВОЕ: Устанавливаем текущее время как время обновления ---
+        updatedAt: now,
       };
     });
   }
@@ -313,9 +324,8 @@ export class ScheduleService implements OnModuleInit {
 
       await this.scheduleRepository.save(lessons);
       this.logger.log(`[saveScheduleToDb] ✅ Successfully saved new lessons to DB.`);
-    } catch (dbError) {
+    } catch (dbError: any) {
        this.logger.error(`❌ [saveScheduleToDb] ❌ Failed to save lessons to DB: ${dbError.message}`);
-       // Выбрасываем ошибку, чтобы вызывающая функция могла ее поймать
        throw dbError;
     }
   }
@@ -331,8 +341,6 @@ export class ScheduleService implements OnModuleInit {
       return null;
     }
     const item = list.find(opt => opt.name.trim().toLowerCase() === name.trim().toLowerCase());
-    if (item) { /*this.logger.log(`✅ [findIdByName] Found ID ${item.id} for '${name}'`);*/ }
-    else { this.logger.warn(`❓ [findIdByName] Item not found for '${name}' (type: ${type}).`); }
     return item ? item.id : null;
   }
 
@@ -345,127 +353,91 @@ export class ScheduleService implements OnModuleInit {
     try {
       const response: AxiosResponse<any> = await firstValueFrom(this.httpService.post(url, paramsString, { headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json, text/plain, */*', 'User-Agent': 'Mozilla/5.0...' }, timeout: 10000 }));
       this.logger.log(`📥 [fetchApiSchedule] Raw response from ${endpoint}. Status: ${response.status}.`);
-      const responseBodyString = JSON.stringify(response.data);
-      if (responseBodyString.length < 500) { this.logger.log(`📦 [fetchApiSchedule] Body: ${responseBodyString}`); }
-      else { this.logger.log(`📦 [fetchApiSchedule] Body (truncated): ${responseBodyString.substring(0, 500)}...`); }
-      if (!response.data || typeof response.data !== 'object') { this.logger.warn(`⚠️ [fetchApiSchedule] Non-object data from ${endpoint}. Data: ${response.data}`); return []; }
-      if (!response.data.hasOwnProperty('week')) { this.logger.warn(`⚠️ [fetchApiSchedule] Missing 'week' property in response for ${endpoint}. Full response: ${JSON.stringify(response.data)}`); return []; }
+      
+      if (!response.data || typeof response.data !== 'object') { this.logger.warn(`⚠️ [fetchApiSchedule] Non-object data from ${endpoint}.`); return []; }
+      if (!response.data.hasOwnProperty('week')) { this.logger.warn(`⚠️ [fetchApiSchedule] Missing 'week' property in response for ${endpoint}.`); return []; }
       const lessons = response.data.week;
       if (Array.isArray(lessons)) {
-        if (lessons.length > 0 && typeof lessons[0] !== 'object') { this.logger.warn(`⚠️ [fetchApiSchedule] 'week' array has non-object elements for ${endpoint}.`); return []; }
         this.logger.log(`✅ [fetchApiSchedule] Parsed ${lessons.length} lessons from 'week'.`);
         return lessons as UsarbApiLesson[];
       }
-      this.logger.warn(`⚠️ [fetchApiSchedule] 'week' is not an array for ${endpoint}: ${JSON.stringify(response.data)}`);
       return [];
     } catch (error) { 
       this.logger.error(`❌ [fetchApiSchedule] Error calling API ${endpoint}.`); 
       this.logAxiosError(error, endpoint); 
-      // Выбрасываем ошибку, чтобы 'getSchedule' мог ее поймать
       throw error;
     }
   }
 
-  // ---
-  // --- Логика кэширования МАСТЕР-ЛИСТОВ (Группы, Учителя, Аудитории)
-  // ---
   private cacheMasterLists(): Promise<void> {
     if (this.isCachingInProgress && this.cachePromise) {
-      this.logger.log('⏳ [cacheMasterLists] Caching in progress (awaiting)...');
       return this.cachePromise;
     }
 
     this.isCachingInProgress = true;
-    this.logger.log('⏳ [cacheMasterLists] Starting master list caching...');
-
     this.cachePromise = (async () => {
       
-      // --- 1. Process Groups ---
       try {
         const groupCount = await this.groupRepository.count();
         if (groupCount > 0) {
           this.cachedMasterLists.group = await this.groupRepository.find({order: {name: 'ASC'}});
-          this.logger.log(`✅ [cacheMasterLists] Loaded ${groupCount} groups from DB.`);
         } else {
-          this.logger.warn('⚠️ [cacheMasterLists] Groups table is empty. Fetching from API...');
           const groupsResponse = await this.fetchMasterListApi('getGroups');
           if (Array.isArray(groupsResponse)) {
-            const apiGroups = this.filterGroupList(groupsResponse); // Фильтруем И убираем дубликаты
+            const apiGroups = this.filterGroupList(groupsResponse);
             await this.groupRepository.save(apiGroups); 
             this.cachedMasterLists.group = apiGroups; 
-            this.logger.log(`✅ [cacheMasterLists] Fetched and saved ${apiGroups.length} groups.`);
-          } else {
-            this.logger.error('❌ [cacheMasterLists] Failed to fetch groups from API.');
           }
         }
-      } catch (error) {
+      } catch (error: any) {
          this.logger.error(`❌ [cacheMasterLists] CRITICAL error processing GROUPS: ${error.message}`);
       }
 
-      // --- 2. Process Teachers ---
       try {
         const teacherCount = await this.teacherRepository.count();
         if (teacherCount > 0) {
           this.cachedMasterLists.teacher = await this.teacherRepository.find({order: {name: 'ASC'}});
-          this.logger.log(`✅ [cacheMasterLists] Loaded ${teacherCount} teachers from DB.`);
         } else {
-          this.logger.warn('⚠️ [cacheMasterLists] Teachers table is empty. Fetching from API...');
           const teachersResponse = await this.fetchMasterListApi('getTeachers');
           if (Array.isArray(teachersResponse)) {
-            const apiTeachers = this.processRawList(teachersResponse); // Убираем дубликаты
+            const apiTeachers = this.processRawList(teachersResponse);
             await this.teacherRepository.save(apiTeachers); 
             this.cachedMasterLists.teacher = apiTeachers; 
-            this.logger.log(`✅ [cacheMasterLists] Fetched and saved ${apiTeachers.length} teachers.`);
-          } else {
-            this.logger.error('❌ [cacheMasterLists] Failed to fetch teachers from API.');
           }
         }
-      } catch (error) {
+      } catch (error: any) {
          this.logger.error(`❌ [cacheMasterLists] CRITICAL error processing TEACHERS: ${error.message}`);
       }
 
-      // --- 3. Process Offices ---
       try {
         const officeCount = await this.officeRepository.count();
         if (officeCount > 0) {
           this.cachedMasterLists.office = await this.officeRepository.find({order: {name: 'ASC'}});
-          this.logger.log(`✅ [cacheMasterLists] Loaded ${officeCount} offices from DB.`);
         } else {
-          this.logger.warn('⚠️ [cacheMasterLists] Offices table is empty. Fetching from API...');
           const officesResponse = await this.fetchMasterListApi('getOffices');
           if (Array.isArray(officesResponse)) {
-            const apiOffices = this.processRawList(officesResponse); // Убираем дубликаты
+            const apiOffices = this.processRawList(officesResponse);
             await this.officeRepository.save(apiOffices); 
             this.cachedMasterLists.office = apiOffices; 
-            this.logger.log(`✅ [cacheMasterLists] Fetched and saved ${apiOffices.length} offices.`);
-          } else {
-            this.logger.error('❌ [cacheMasterLists] Failed to fetch offices from API.');
           }
         }
-      } catch (error) {
+      } catch (error: any) {
          this.logger.error(`❌ [cacheMasterLists] CRITICAL error processing OFFICES: ${error.message}`);
       }
       
       this.isCachingInProgress = false;
       this.cachePromise = null;
-      this.logger.log('🏁 [cacheMasterLists] Caching finished.');
-      this.logger.log(`ℹ️ [cacheMasterLists] Memory cache state: G:${this.cachedMasterLists.group?.length ?? 0}, T:${this.cachedMasterLists.teacher?.length ?? 0}, O:${this.cachedMasterLists.office?.length ?? 0}`);
-
     })();
     return this.cachePromise;
   }
   
   private async fetchMasterListApi(endpoint: string): Promise<UsarbApiMasterListItem[] | null> {
-    this.logger.log(`📡 [fetchMasterListApi] Fetching: POST ${this.ORAR_API_URL}/${endpoint}`);
     try {
       const response = await firstValueFrom(this.httpService.post<UsarbApiMasterListItem[]>(`${this.ORAR_API_URL}/${endpoint}`, {}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'Mozilla/5.0', Accept: 'application/json, text/plain, */*' }, timeout: 15000 }));
-      this.logger.log(`📥 [fetchMasterListApi] Raw response for ${endpoint}: ${JSON.stringify(response.data)?.substring(0, 100)}...`);
-      if (Array.isArray(response?.data)) { this.logger.log(`✅ [fetchMasterListApi] Parsed array for ${endpoint}. Length: ${response.data.length}`); return response.data; }
-      else { this.logger.warn(`⚠️ [fetchMasterListApi] Invalid format for ${endpoint}. Expected array, got: ${typeof response?.data}`); return null; }
+      if (Array.isArray(response?.data)) { return response.data; }
+      else { return null; }
     } catch (error) { 
-      this.logger.error(`❌ [fetchMasterListApi] Error fetching ${endpoint}.`); 
       this.logAxiosError(error, endpoint); 
-      // Выбрасываем ошибку, чтобы 'cacheMasterLists' мог ее поймать
       throw error;
     }
   }
@@ -478,7 +450,7 @@ export class ScheduleService implements OnModuleInit {
       if (item && item.Id && item.Denumire && String(item.Denumire).trim() !== '') {
         const id = String(item.Id);
         const name = String(item.Denumire).trim();
-        if (!uniqueMap.has(id)) { // Убираем дубликаты по ID
+        if (!uniqueMap.has(id)) {
           uniqueMap.set(id, { id, name });
         }
       }
@@ -489,10 +461,7 @@ export class ScheduleService implements OnModuleInit {
 
   private filterGroupList(list: UsarbApiMasterListItem[]): SearchOption[] {
     const uniqueMap = new Map<string, SearchOption>();
-    if (!Array.isArray(list)) {
-      this.logger.warn('⚠️ [filterGroupList] Input not an array.');
-      return [];
-    }
+    if (!Array.isArray(list)) return [];
 
     for (const item of list) {
       if (!item || typeof item.Denumire !== 'string' || !item.Id) continue;
@@ -510,27 +479,20 @@ export class ScheduleService implements OnModuleInit {
       const id = String(item.Id);
       const name = String(item.Denumire).trim();
 
-      if (!uniqueMap.has(id)) { // Убираем дубликаты по ID
+      if (!uniqueMap.has(id)) {
         uniqueMap.set(id, { id, name });
       }
     }
-    
-    const filtered = Array.from(uniqueMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-    
-    this.logger.log(`🔎 [filterGroupList] Processed ${list.length} raw items -> ${filtered.length} unique, filtered groups.`);
-    return filtered;
+    return Array.from(uniqueMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
 
   private mapCourseNumberToTime(courseNumber: number): string {
     const times: { [key: number]: string } = { 1: '08:00', 2: '09:45', 3: '11:30', 4: '13:15', 5: '15:00', 6: '16:45', 7: '18:30' };
-    if (!times[courseNumber]) { this.logger.warn(`❓ [mapCourseNumberToTime] Unknown course number: ${courseNumber}`); }
     return times[courseNumber] || `Para ${courseNumber}?`;
   }
 
   private mapApiLessonType(apiType: string): ScheduleEntry['type'] {
-    if (!apiType) {
-      return 'N/A';
-    }
+    if (!apiType) return 'N/A';
     const upperApiType = apiType.trim().toUpperCase();
     const typeMap: { [key: string]: string } = {
       'PRELEGERI': 'Prelegere',
@@ -550,12 +512,7 @@ export class ScheduleService implements OnModuleInit {
       'SEMINAR PREALABIL': 'Seminar prealabil',
       'SEMINAR DE TOTALIZARE': 'Seminar de totalizare',
     };
-    const mappedType = typeMap[upperApiType];
-    if (!mappedType) {
-      this.logger.warn(`❓ [mapApiLessonType] Unknown type: '${apiType}'.`);
-      return (apiType as ScheduleEntry['type']) || 'N/A'; 
-    }
-    return mappedType as ScheduleEntry['type'];
+    return (typeMap[upperApiType] as ScheduleEntry['type']) || (apiType as ScheduleEntry['type']) || 'N/A';
   }
 
   private getProfessorColor(professorName: string): string {
@@ -569,9 +526,8 @@ export class ScheduleService implements OnModuleInit {
   }
 
   private logAxiosError(error: any, context: string): void {
-    if (error.response) { this.logger.error(`❌ Axios error (${context}): ${error.response.status} ${error.response.statusText} - URL: ${error.config?.url} - Data: ${JSON.stringify(error.response.data)}`); }
-    else if (error.request) { this.logger.error(`❌ Axios error (${context}): No response received. ${error.message} - URL: ${error.config?.url}`); }
-    else { this.logger.error(`❌ Axios error (${context}): Request setup error. ${error.message}`); }
+    if (error.response) { this.logger.error(`❌ Axios error (${context}): ${error.response.status} ${error.response.statusText}`); }
+    else if (error.request) { this.logger.error(`❌ Axios error (${context}): No response received.`); }
+    else { this.logger.error(`❌ Axios error (${context}): Request setup error.`); }
   }
-}  
-    
+}

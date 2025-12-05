@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useDrag } from '@use-gesture/react';
-import { addDays, subDays, startOfWeek } from 'date-fns';
+import { addDays, subDays, startOfWeek, parseISO, max } from 'date-fns';
 import { RO_WEEK_OPTIONS } from '@/utils/date-config';
 import { WeekTable } from '../components/WeekTable';
 import { DayView } from '../components/DayView';
@@ -34,8 +34,7 @@ interface MobileViewProps {
   isLoading: boolean;
   error: string | null;
   isInitialLoad: boolean;
-  selectedDate: Date |
- null;
+  selectedDate: Date | null;
   setSelectedDate: (date: Date | null) => void;
   getScheduleForDate: (date: Date | null, query: string, type: SearchType) => ScheduleEntry[];
   searchQuery: string;
@@ -45,6 +44,8 @@ interface MobileViewProps {
   searchOptions: Record<SearchType, SearchOption[]>;
   setIsSearchOpen: (isOpen: boolean) => void;
   setIsHeaderVisible: (isVisible: boolean) => void;
+  onRefresh?: () => void;
+  lastUpdated?: Date | null;
 }
 
 type ViewMode = 'month' | 'main' | 'day';
@@ -62,7 +63,8 @@ export function MobileView({
   setSearchType,
   searchOptions,
   setIsSearchOpen,
-  setIsHeaderVisible
+  setIsHeaderVisible,
+  onRefresh,
 }: MobileViewProps) {
   
   const [animationState, setAnimationState] = useState({
@@ -181,14 +183,32 @@ export function MobileView({
     {}
   );
 
-  // --- ОБНОВЛЕНИЕ: Собираем пропсы для передачи в LegendAndActions ---
+  // --- НОВОЕ: Вычисляем дату специфично для мобильного вида ---
+  const specificLastUpdated = useMemo(() => {
+    if (!selectedDate) return null;
+    
+    // Получаем дни недели для текущей выбранной даты
+    const weekStart = startOfWeek(selectedDate, RO_WEEK_OPTIONS);
+    const weekDays = [0,1,2,3,4,5,6].map(d => addDays(weekStart, d));
+    
+    const lessons = weekDays.flatMap(day => getScheduleForDate(day, searchQuery, searchType));
+    
+    if (lessons.length === 0) return null;
+
+    const dates = lessons
+        .map(l => l.updatedAt ? parseISO(l.updatedAt) : null)
+        .filter((d): d is Date => d !== null);
+
+    return dates.length > 0 ? max(dates) : null;
+  }, [selectedDate, getScheduleForDate, searchQuery, searchType]);
+
+
   const legendProps = {
     selectedDate,
     getScheduleForDate,
     searchQuery,
     searchType,
   };
-  // --- КОНЕЦ ОБНОВЛЕНИЯ ---
 
   return (
     <div className="flex-grow min-h-0 relative overflow-hidden">
@@ -245,6 +265,8 @@ export function MobileView({
                 setSearchType={setSearchType}
                 searchOptions={searchOptions}
                 setIsSearchOpen={setIsSearchOpen}
+                onRefresh={onRefresh}
+                lastUpdated={specificLastUpdated} // <-- Передаем вычисленную дату
               />
             </div>
 
@@ -279,11 +301,9 @@ export function MobileView({
               </AnimatePresence>
             </div>
             
-            {/* --- ОБНОВЛЕНИЕ: Передаем пропсы в LegendAndActions --- */}
             <div className="mt-auto flex-shrink-0">
               <LegendAndActions {...legendProps} />
             </div>
-            {/* --- КОНЕЦ ОБНОВЛЕНИЯ --- */}
           </motion.div>
          )}
         
