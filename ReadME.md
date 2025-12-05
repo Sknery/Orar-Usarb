@@ -12,11 +12,11 @@ DB_DATABASE=orar_db
 GOOGLE_CLIENT_ID=<Ваш Google Client ID>
 GOOGLE_CLIENT_SECRET=<Ваш Google Client Secret>
 # Callback URL должен ТОЧНО совпадать с тем, что вы указали в Google Cloud
-GOOGLE_CALLBACK_URL=https://orar.usarb.md/google-calendar/oauth-callback
+GOOGLE_CALLBACK_URL=[https://orar.usarb.md/google-calendar/oauth-callback](https://orar.usarb.md/google-calendar/oauth-callback)
 
 # --- Настройки Домена ---
 # URL, который используется фронтендом для редиректов. 
-FRONTEND_URL=https://orar.usarb.md
+FRONTEND_URL=[https://orar.usarb.md](https://orar.usarb.md)
 
 # --- Порты ---
 # Внешние порты. 8080 для фронтенда, 3000 для бэкенда (хотя бэкенд не должен быть открыт)
@@ -28,7 +28,7 @@ API_PORT=3000
     location / {
         # *** ЭТО КРИТИЧЕСКАЯ ИСПРАВЛЕННАЯ СТРОКА ***
         # Весь трафик идет на фронтенд Nginx, который слушает порт 8080 на хосте
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass [http://127.0.0.1:8080](http://127.0.0.1:8080);
         
         # Стандартные заголовки для корректной работы прокси
         proxy_set_header Host $host;
