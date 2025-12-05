@@ -1,7 +1,3 @@
-Конечно — вот аккуратно оформленный **README.md**, собранный по структуре вашего гайда и оформленный как стандартный продакшн-README для репозитория.
-
----
-
 # 📘 Orar USARB — Production Deployment Guide
 
 Многоконтейнерное приложение (Frontend Nginx, Backend NestJS, PostgreSQL)
@@ -161,12 +157,3 @@ docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs schedule-api-prod
 ```
 
----
-
-Если нужно — могу:
-
-✅ сгенерировать `README.md` файлом (скачиваемый)
-✅ добавить раздел «Troubleshooting»
-✅ оформить README в более “GitHub-стиль” с таблицами, картинками и архитектурными схемами
-
-Сказать?
